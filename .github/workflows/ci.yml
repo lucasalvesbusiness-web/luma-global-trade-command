@@ -1,0 +1,75 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DATABASE_URL: postgresql://luma:luma_dev_password@localhost:5432/luma_gtc?schema=public
+  AUTH_SECRET: ci_placeholder_secret_do_not_use_in_prod
+  NEXTAUTH_URL: http://localhost:3000
+  NEXT_PUBLIC_MAPBOX_TOKEN: pk.ci_placeholder_token
+  SMTP_HOST: localhost
+  SMTP_PORT: 1025
+  SMTP_FROM: "Luma CI <no-reply@luma.local>"
+
+jobs:
+  lint-typecheck-test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: luma
+          POSTGRES_PASSWORD: luma_dev_password
+          POSTGRES_DB: luma_gtc
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U luma -d luma_gtc"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Enable Postgres extensions
+        run: |
+          PGPASSWORD=luma_dev_password psql -h localhost -U luma -d luma_gtc \
+            -c "CREATE EXTENSION IF NOT EXISTS pgcrypto;" \
+            -c "CREATE EXTENSION IF NOT EXISTS citext;" \
+            -c 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";'
+
+      - name: Prisma generate
+        run: pnpm exec prisma generate
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Unit tests
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build

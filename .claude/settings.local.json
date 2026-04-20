@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/Pichau/.claude/projects/C--lumaglobaltradecommand/memory//**)",
+      "Read(//c/Users/Pichau/.claude/plans//**)",
+      "Bash(pnpm --version)",
+      "Bash(docker --version)",
+      "Bash(git --version)",
+      "Bash(corepack --version)",
+      "Bash(npm --version)",
+      "Bash(corepack enable *)",
+      "Bash(corepack prepare *)",
+      "Bash(npm config *)",
+      "Bash(npm install *)",
+      "Bash(pnpm dlx *)",
+      "Bash(taskkill //F //PID 252 //T)",
+      "Bash(taskkill //F //PID 250 //T)",
+      "Bash(tasklist //FI \"IMAGENAME eq node.exe\")",
+      "Bash(taskkill //F //PID 37556 //T)",
+      "Bash(taskkill //F //PID 29520 //T)",
+      "Bash(pnpm install *)",
+      "Bash(docker compose *)",
+      "Bash(pnpm exec *)",
+      "Bash(pnpm typecheck *)",
+      "Bash(pnpm lint *)",
+      "Bash(pnpm test *)",
+      "Bash(pnpm build *)"
+    ]
+  }
+}

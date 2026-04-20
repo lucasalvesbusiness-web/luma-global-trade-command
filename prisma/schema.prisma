@@ -1,0 +1,678 @@
+// Luma Global Trade Command — Prisma schema
+// Referência: docs/06-operational-ontology-and-object-model.md
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [pgcrypto, citext, uuid_ossp(map: "uuid-ossp")]
+}
+
+// ============================================================
+// Identity & Access
+// ============================================================
+
+enum UserRole {
+  BUYER
+  STAFF
+  ADMIN
+}
+
+enum StaffTeam {
+  COMMERCIAL
+  OPERATIONS
+  COMPLIANCE
+  ADMIN
+}
+
+enum BuyerCompanyType {
+  IMPORTER
+  DISTRIBUTOR
+  WHOLESALER
+  RETAIL
+  INDUSTRY
+  TRADER
+}
+
+model User {
+  id            String    @id @default(uuid()) @db.Uuid
+  email         String    @unique @db.Citext
+  emailVerified DateTime?
+  name          String?
+  image         String?
+  locale        String    @default("pt-br")
+  role          UserRole  @default(BUYER)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts Account[]
+  sessions Session[]
+  buyer    Buyer?
+  staff    StaffMember?
+
+  createdProposals   Proposal[]     @relation("ProposalCreatedBy")
+  proposalNotes      ProposalNote[]
+  auditEvents        AuditEvent[]
+  approvedFieldPhotos FieldPhoto[] @relation("FieldPhotoApprover")
+
+  @@map("users")
+}
+
+// Auth.js v5 (NextAuth) standard tables
+model Account {
+  id                String  @id @default(cuid())
+  userId            String  @db.Uuid
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String   @db.Uuid
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+model BuyerCompany {
+  id                     String           @id @default(uuid()) @db.Uuid
+  legalName              String
+  displayName            String?
+  type                   BuyerCompanyType
+  countryIso2            String           @db.Char(2)
+  city                   String?
+  address                String?
+  defaultPortId          String?          @db.Uuid
+  defaultIncoterm        String?
+  estimatedMonthlyVolume String?
+  createdAt              DateTime         @default(now())
+  updatedAt              DateTime         @updatedAt
+
+  country       Country    @relation(fields: [countryIso2], references: [iso2])
+  defaultPort   Port?      @relation(fields: [defaultPortId], references: [id])
+  buyers        Buyer[]
+  proposals     Proposal[]
+
+  @@map("buyer_companies")
+}
+
+model Buyer {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @unique @db.Uuid
+  companyId String   @db.Uuid
+  createdAt DateTime @default(now())
+
+  user    User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company BuyerCompany @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@map("buyers")
+}
+
+model StaffMember {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @unique @db.Uuid
+  team      StaffTeam
+  title     String?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("staff_members")
+}
+
+// ============================================================
+// Geography
+// ============================================================
+
+enum PortKind {
+  SEAPORT
+  AIRPORT
+  INLAND
+}
+
+model Country {
+  iso2      String  @id @db.Char(2)
+  iso3      String  @unique @db.Char(3)
+  name      String
+  region    String?
+  flagAsset String?
+
+  ports             Port[]
+  buyerCompanies    BuyerCompany[]
+  phytosanitary     PhytosanitaryRequirement[]
+  complianceGates   ComplianceGate[]
+  proposals         Proposal[]
+
+  @@map("countries")
+}
+
+model Port {
+  id          String   @id @default(uuid()) @db.Uuid
+  countryIso2 String   @db.Char(2)
+  name        String
+  code        String?
+  kind        PortKind @default(SEAPORT)
+
+  country         Country        @relation(fields: [countryIso2], references: [iso2])
+  routes          Route[]
+  buyerDefaults   BuyerCompany[]
+  proposals       Proposal[]     @relation("ProposalDestinationPort")
+
+  @@unique([countryIso2, code])
+  @@map("ports")
+}
+
+model OriginRegion {
+  id         String   @id @default(uuid()) @db.Uuid
+  name       String   @unique
+  centroidLat Float?
+  centroidLng Float?
+  bboxJson   Json?
+
+  origins Origin[]
+
+  @@map("origin_regions")
+}
+
+enum OriginKind {
+  OWN_FARM
+  AUDITED_PARTNER
+  AGROINDUSTRIAL_UNIT
+}
+
+model Origin {
+  id                      String       @id @default(uuid()) @db.Uuid
+  name                    String
+  slug                    String       @unique
+  kind                    OriginKind
+  regionId                String       @db.Uuid
+  lat                     Float?
+  lng                     Float?
+  statusBlurb             String?
+  approvedCertifications  String[]
+  createdAt               DateTime     @default(now())
+  updatedAt               DateTime     @updatedAt
+
+  region          OriginRegion     @relation(fields: [regionId], references: [id])
+  fieldPlots      FieldPlot[]
+  packingHouses   PackingHouse[]
+  coldChambers    ColdChamber[]
+  logisticsHubs   LogisticsHub[]
+  routes          Route[]
+  availabilities  Availability[]
+  harvestWindows  HarvestWindow[]
+  fieldUpdates    FieldUpdate[]
+
+  @@map("origins")
+}
+
+model FieldPlot {
+  id       String  @id @default(uuid()) @db.Uuid
+  originId String  @db.Uuid
+  name     String
+  crop     String
+  areaHa   Float?
+  lat      Float?
+  lng      Float?
+
+  origin       Origin        @relation(fields: [originId], references: [id], onDelete: Cascade)
+  fieldUpdates FieldUpdate[]
+
+  @@map("field_plots")
+}
+
+model PackingHouse {
+  id           String  @id @default(uuid()) @db.Uuid
+  originId     String? @db.Uuid
+  name         String
+  capacityBlurb String?
+  lat          Float?
+  lng          Float?
+
+  origin Origin? @relation(fields: [originId], references: [id])
+
+  @@map("packing_houses")
+}
+
+model ColdChamber {
+  id           String  @id @default(uuid()) @db.Uuid
+  originId     String? @db.Uuid
+  name         String
+  capacityBlurb String?
+  tempRangeC   String?
+
+  origin Origin? @relation(fields: [originId], references: [id])
+
+  @@map("cold_chambers")
+}
+
+model LogisticsHub {
+  id       String  @id @default(uuid()) @db.Uuid
+  originId String? @db.Uuid
+  name     String
+  kind     String
+  lat      Float?
+  lng      Float?
+
+  origin Origin? @relation(fields: [originId], references: [id])
+
+  @@map("logistics_hubs")
+}
+
+enum RouteModality {
+  ROAD
+  RAIL
+  SEA
+  AIR
+  MULTIMODAL
+}
+
+model Route {
+  id       String        @id @default(uuid()) @db.Uuid
+  originId String        @db.Uuid
+  portId   String        @db.Uuid
+  modality RouteModality @default(ROAD)
+  notes    String?
+
+  origin Origin @relation(fields: [originId], references: [id], onDelete: Cascade)
+  port   Port   @relation(fields: [portId], references: [id], onDelete: Cascade)
+
+  @@unique([originId, portId, modality])
+  @@map("routes")
+}
+
+// ============================================================
+// Catalog
+// ============================================================
+
+enum RecommendedContainerKind {
+  REEFER_20
+  REEFER_40
+  REEFER_40_HC
+  DRY_20
+  DRY_40
+}
+
+model ProductCategory {
+  id    String    @id @default(uuid()) @db.Uuid
+  slug  String    @unique
+  name  String
+
+  products Product[]
+
+  @@map("product_categories")
+}
+
+model Product {
+  id                       String                   @id @default(uuid()) @db.Uuid
+  categoryId               String                   @db.Uuid
+  slug                     String                   @unique
+  name                     String
+  summary                  String?
+  heroImage                String?
+  tempRangeMinC            Float?
+  tempRangeMaxC            Float?
+  shelfLifeDaysMin         Int?
+  shelfLifeDaysMax         Int?
+  recommendedContainerKind RecommendedContainerKind
+  createdAt                DateTime                 @default(now())
+  updatedAt                DateTime                 @updatedAt
+
+  category        ProductCategory            @relation(fields: [categoryId], references: [id])
+  varieties       Variety[]
+  availabilities  Availability[]
+  harvestWindows  HarvestWindow[]
+  phytosanitary   PhytosanitaryRequirement[]
+  complianceGates ComplianceGate[]
+  loadItems       LoadItem[]
+
+  @@map("products")
+}
+
+model Variety {
+  id            String  @id @default(uuid()) @db.Uuid
+  productId     String  @db.Uuid
+  name          String
+  boxWeightKg   Float
+  boxDimensions String?
+  palletConfig  String?
+
+  product        Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
+  availabilities Availability[]
+  harvestWindows HarvestWindow[]
+  loadItems      LoadItem[]
+
+  @@unique([productId, name])
+  @@map("varieties")
+}
+
+// ============================================================
+// Availability & Field Intelligence
+// ============================================================
+
+enum AvailabilityStatus {
+  AVAILABLE_NOW
+  PRE_RESERVE_OPEN
+  UNDER_TECHNICAL_VALIDATION
+  LIMITED_AVAILABILITY
+  UNDER_CONSULTATION
+  NOT_AVAILABLE_FOR_DESTINATION
+}
+
+enum ConfidenceLevel {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+model Availability {
+  id               String             @id @default(uuid()) @db.Uuid
+  productId        String             @db.Uuid
+  varietyId        String?            @db.Uuid
+  originId         String             @db.Uuid
+  volumeTonsBand   String
+  status           AvailabilityStatus
+  validFrom        DateTime
+  validTo          DateTime
+  notes            String?
+  updatedAt        DateTime           @updatedAt
+
+  product Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variety Variety? @relation(fields: [varietyId], references: [id])
+  origin  Origin   @relation(fields: [originId], references: [id])
+
+  @@map("availabilities")
+}
+
+model HarvestWindow {
+  id         String          @id @default(uuid()) @db.Uuid
+  productId  String          @db.Uuid
+  varietyId  String?         @db.Uuid
+  originId   String          @db.Uuid
+  startDate  DateTime
+  endDate    DateTime
+  confidence ConfidenceLevel @default(MEDIUM)
+  notes      String?
+
+  product Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variety Variety? @relation(fields: [varietyId], references: [id])
+  origin  Origin   @relation(fields: [originId], references: [id])
+
+  @@map("harvest_windows")
+}
+
+enum FieldStage {
+  PRE_PLANTING
+  PLANTED
+  GROWING
+  FLOWERING
+  FRUITING
+  HARVEST
+  POST_HARVEST
+}
+
+model FieldUpdate {
+  id            String          @id @default(uuid()) @db.Uuid
+  originId      String          @db.Uuid
+  fieldPlotId   String?         @db.Uuid
+  observedAt    DateTime
+  stage         FieldStage
+  conditionNote String?
+  riskSummary   String?
+  confidence    ConfidenceLevel @default(MEDIUM)
+  createdAt     DateTime        @default(now())
+
+  origin    Origin       @relation(fields: [originId], references: [id], onDelete: Cascade)
+  fieldPlot FieldPlot?   @relation(fields: [fieldPlotId], references: [id])
+  photos    FieldPhoto[]
+
+  @@map("field_updates")
+}
+
+model FieldPhoto {
+  id                    String    @id @default(uuid()) @db.Uuid
+  fieldUpdateId         String    @db.Uuid
+  storagePath           String
+  caption               String?
+  approvedForBuyerView  Boolean   @default(false)
+  approvedByUserId      String?   @db.Uuid
+  approvedAt            DateTime?
+  createdAt             DateTime  @default(now())
+
+  fieldUpdate   FieldUpdate @relation(fields: [fieldUpdateId], references: [id], onDelete: Cascade)
+  approvedBy    User?       @relation("FieldPhotoApprover", fields: [approvedByUserId], references: [id])
+
+  @@map("field_photos")
+}
+
+// ============================================================
+// Compliance & Phytosanitary
+// ============================================================
+
+model DocumentRequirement {
+  id    String @id @default(uuid()) @db.Uuid
+  code  String @unique
+  name  String
+  notes String?
+
+  phytosanitaryItems PhytosanitaryRequirementItem[]
+
+  @@map("document_requirements")
+}
+
+model PhytosanitaryRequirement {
+  id          String @id @default(uuid()) @db.Uuid
+  productId   String @db.Uuid
+  countryIso2 String @db.Char(2)
+  notes       String?
+
+  product Product                         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  country Country                         @relation(fields: [countryIso2], references: [iso2])
+  items   PhytosanitaryRequirementItem[]
+
+  @@unique([productId, countryIso2])
+  @@map("phytosanitary_requirements")
+}
+
+model PhytosanitaryRequirementItem {
+  id                         String @id @default(uuid()) @db.Uuid
+  phytosanitaryRequirementId String @db.Uuid
+  documentRequirementId      String @db.Uuid
+  mandatory                  Boolean @default(true)
+
+  phytosanitary PhytosanitaryRequirement @relation(fields: [phytosanitaryRequirementId], references: [id], onDelete: Cascade)
+  document      DocumentRequirement      @relation(fields: [documentRequirementId], references: [id])
+
+  @@unique([phytosanitaryRequirementId, documentRequirementId])
+  @@map("phytosanitary_requirement_items")
+}
+
+enum ComplianceGateStatus {
+  PREVIEW_AVAILABLE
+  REQUIREMENTS_PENDING
+  DOCUMENTATION_REQUIRED
+  SUBJECT_TO_FINAL_VALIDATION
+  BLOCKED
+  CLEARED_INTERNALLY
+}
+
+model ComplianceGate {
+  id          String               @id @default(uuid()) @db.Uuid
+  productId   String               @db.Uuid
+  countryIso2 String               @db.Char(2)
+  status      ComplianceGateStatus @default(PREVIEW_AVAILABLE)
+  notes       String?
+  updatedAt   DateTime             @updatedAt
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  country Country @relation(fields: [countryIso2], references: [iso2])
+
+  @@unique([productId, countryIso2])
+  @@map("compliance_gates")
+}
+
+// ============================================================
+// Logistics — Containers & Load Plan
+// ============================================================
+
+enum ContainerCode {
+  C_20_RF
+  C_40_RF
+  C_40_HC_RF
+  C_20_DR
+  C_40_DR
+}
+
+model ContainerType {
+  id              String        @id @default(uuid()) @db.Uuid
+  code            ContainerCode @unique
+  displayName     String
+  internalLengthM Float
+  internalWidthM  Float
+  internalHeightM Float
+  maxPayloadKg    Float
+  supportsReefer  Boolean       @default(false)
+  defaultTempC    Float?
+
+  loadPlans LoadPlan[]
+
+  @@map("container_types")
+}
+
+model LoadPlan {
+  id              String   @id @default(uuid()) @db.Uuid
+  proposalId      String   @unique @db.Uuid
+  containerTypeId String   @db.Uuid
+  configuredTempC Float?
+  notes           String?
+  updatedAt       DateTime @updatedAt
+
+  proposal      Proposal      @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+  containerType ContainerType @relation(fields: [containerTypeId], references: [id])
+  items         LoadItem[]
+
+  @@map("load_plans")
+}
+
+model LoadItem {
+  id            String @id @default(uuid()) @db.Uuid
+  loadPlanId    String @db.Uuid
+  productId     String @db.Uuid
+  varietyId     String? @db.Uuid
+  qtyBoxes      Int
+  qtyPallets    Int
+  totalWeightKg Float
+
+  loadPlan LoadPlan @relation(fields: [loadPlanId], references: [id], onDelete: Cascade)
+  product  Product  @relation(fields: [productId], references: [id])
+  variety  Variety? @relation(fields: [varietyId], references: [id])
+
+  @@map("load_items")
+}
+
+// ============================================================
+// Commercial — Proposals & Audit Trail
+// ============================================================
+
+enum ProposalStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_COMMERCIAL_REVIEW
+  UNDER_OPERATIONAL_REVIEW
+  DOCUMENTATION_REVIEW_REQUIRED
+  ADJUSTMENT_REQUESTED
+  APPROVED_FOR_NEGOTIATION
+  REJECTED
+  CONVERTED_TO_OPERATION
+}
+
+enum ProposalNoteKind {
+  INTERNAL
+  TO_BUYER
+}
+
+model Proposal {
+  id                    String         @id @default(uuid()) @db.Uuid
+  reference             String         @unique
+  buyerCompanyId        String         @db.Uuid
+  destinationCountryIso String         @db.Char(2)
+  destinationPortId     String?        @db.Uuid
+  incoterm              String?
+  status                ProposalStatus @default(DRAFT)
+  createdByUserId       String         @db.Uuid
+  createdAt             DateTime       @default(now())
+  submittedAt           DateTime?
+  updatedAt             DateTime       @updatedAt
+
+  buyerCompany       BuyerCompany   @relation(fields: [buyerCompanyId], references: [id])
+  destinationCountry Country        @relation(fields: [destinationCountryIso], references: [iso2])
+  destinationPort    Port?          @relation("ProposalDestinationPort", fields: [destinationPortId], references: [id])
+  createdBy          User           @relation("ProposalCreatedBy", fields: [createdByUserId], references: [id])
+  loadPlan           LoadPlan?
+  notes              ProposalNote[]
+  auditEvents        AuditEvent[]
+
+  @@map("proposals")
+}
+
+model ProposalNote {
+  id         String           @id @default(uuid()) @db.Uuid
+  proposalId String           @db.Uuid
+  authorId   String           @db.Uuid
+  team       StaffTeam?
+  body       String
+  kind       ProposalNoteKind @default(INTERNAL)
+  createdAt  DateTime         @default(now())
+
+  proposal Proposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+  author   User     @relation(fields: [authorId], references: [id])
+
+  @@map("proposal_notes")
+}
+
+model AuditEvent {
+  id         String   @id @default(uuid()) @db.Uuid
+  entity     String
+  entityId   String   @db.Uuid
+  actorId    String?  @db.Uuid
+  fromStatus String?
+  toStatus   String?
+  diffJson   Json?
+  occurredAt DateTime @default(now())
+
+  proposal Proposal? @relation(fields: [entityId], references: [id], onDelete: Cascade, map: "audit_events_proposal_fk")
+  actor    User?     @relation(fields: [actorId], references: [id])
+
+  @@index([entity, entityId])
+  @@index([occurredAt])
+  @@map("audit_events")
+}

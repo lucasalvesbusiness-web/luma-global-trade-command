@@ -1,0 +1,27 @@
+@import '../styles/tokens.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: 'rlig' 1, 'calt' 1;
+  }
+  ::selection {
+    @apply bg-luma-sun/30 text-luma-ink;
+  }
+}
+
+@layer components {
+  .luma-glass {
+    background: var(--luma-mist);
+    -webkit-backdrop-filter: blur(14px) saturate(1.1);
+    backdrop-filter: blur(14px) saturate(1.1);
+    border: 1px solid var(--luma-mist-border);
+  }
+}
