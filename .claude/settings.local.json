@@ -24,7 +24,14 @@
       "Bash(pnpm typecheck *)",
       "Bash(pnpm lint *)",
       "Bash(pnpm test *)",
-      "Bash(pnpm build *)"
+      "Bash(pnpm build *)",
+      "Bash(pnpm add *)",
+      "Bash(pnpm remove *)",
+      "Bash(mkdir -p /c/lumaglobaltradecommand/public/media/photos /c/lumaglobaltradecommand/public/media/videos)",
+      "Bash(cp \"1.jpeg\"                                        \"../public/media/photos/manga-harvest.jpg\")",
+      "Bash(cp \"2.jpeg\"                                        \"../public/media/photos/manga-tree-1.jpg\")",
+      "Bash(cp \"8.jpeg\"                                        \"../public/media/photos/manga-tree-2.jpg\")",
+      "Bash(cp \"9.jpeg\"                                        \"../public/media/photos/manga-tree-3.jpg\")"
     ]
   }
 }

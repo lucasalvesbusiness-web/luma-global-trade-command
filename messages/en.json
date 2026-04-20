@@ -4,8 +4,216 @@
     "tagline": "Luma's agroexport command tower. Explore origin, configure your load and submit a supply proposal with operational predictability.",
     "status": "Phase 0 · Operational foundation — canvas under development"
   },
+  "hud": {
+    "backToGlobe": "Back to globe"
+  },
+  "canvas": {
+    "introHint": "Drag to explore · select a destination",
+    "transiting": "Connecting to Brazil…",
+    "transitEyebrow": "Connecting to Brazil",
+    "transitTitle": "{destination} → Vale do São Francisco",
+    "transitSubtitle": "Tracing route from the Luma origin"
+  },
+  "destinationPicker": {
+    "title": "Set your destination",
+    "subtitle": "Select the destination country, city, port and commercial terms. We'll show only what is compatible with your operation.",
+    "country": "Country",
+    "selectCountry": "Select country",
+    "city": "City",
+    "selectCity": "Select city (optional)",
+    "port": "Destination port",
+    "selectPort": "Select port",
+    "incoterm": "Incoterm",
+    "volume": "Estimated volume",
+    "confirm": "Confirm destination",
+    "subjectLine": "Subject to Luma validation"
+  },
+  "originMap": {
+    "tokenMissingTitle": "Mapbox token missing",
+    "tokenMissingBody": "Fill NEXT_PUBLIC_MAPBOX_TOKEN in your .env file and restart the server.\n\nCreate a free account at account.mapbox.com and copy your Default public token."
+  },
+  "destinationPreview": {
+    "city": "City",
+    "port": "Port"
+  },
+  "productRail": {
+    "eyebrow": "Luma catalog",
+    "title": "Products for your destination",
+    "subjectToValidation": "Subject to Luma validation",
+    "loading": "Loading catalog…",
+    "empty": "No products catalogued for this destination. Get in touch for custom validation.",
+    "inPlan": "in plan",
+    "temperature": "Temp",
+    "shelfLife": "Shelf",
+    "container": "Container",
+    "volume": "Volume",
+    "varieties": "Varieties",
+    "boxes": "Boxes",
+    "pallets": "Pallets",
+    "add": "Add",
+    "remove": "Remove",
+    "availability": "Availability",
+    "harvest": "Upcoming harvests",
+    "field": "Field",
+    "documents": "Documents",
+    "docsExpected": "expected"
+  },
+  "passport": {
+    "eyebrow": "Product Passport",
+    "loading": "Loading passport…",
+    "notFound": "Product not found.",
+    "close": "Close",
+    "subjectToValidation": "Technical preview · Subject to Luma validation",
+    "tabs": {
+      "overview": "Overview",
+      "technical": "Technical",
+      "availability": "Availability",
+      "documents": "Documents",
+      "field": "Field"
+    },
+    "overview": {
+      "originRegion": "Origin",
+      "temperature": "Temperature",
+      "shelfLife": "Shelf life",
+      "container": "Recommended container",
+      "varieties": "Varieties",
+      "activeAvailabilities": "Active availabilities",
+      "projectedHarvests": "Projected harvests"
+    },
+    "technical": {
+      "varieties": "Varieties and packaging",
+      "name": "Variety",
+      "boxWeight": "Box weight",
+      "boxDimensions": "Dimensions",
+      "palletConfig": "Pallet",
+      "action": "Action",
+      "add": "Add",
+      "added": "In plan",
+      "temperature": "Recommended temperature",
+      "shelfLife": "Shelf life",
+      "recommendedContainer": "Recommended container"
+    },
+    "availability": {
+      "activeTitle": "Active availabilities",
+      "activeEmpty": "No active availability — under consultation.",
+      "harvestTitle": "Projected harvest windows",
+      "harvestEmpty": "No harvest windows registered.",
+      "confidence": "Confidence"
+    },
+    "documents": {
+      "previewFor": "Documentation preview",
+      "needDestination": "Select a destination in the bottom panel to see the documentation preview.",
+      "loading": "Loading preview…",
+      "noPreview": "No documentation preview yet for this product × country pair. Under consultation.",
+      "emptyDocs": "No specific documents modelled for this pair.",
+      "expectedDocs": "Expected documents (preview)",
+      "disclaimer": "This is an operational preview. The full and official list is validated case by case by Luma's compliance team."
+    },
+    "field": {
+      "empty": "No field updates for this product yet.",
+      "satelliteView": "Aerial view · Mapbox satellite",
+      "risk": "Risk",
+      "confidence": "Confidence"
+    }
+  },
   "common": {
     "submitProposal": "Submit proposal to Luma",
     "subjectToValidation": "Subject to Luma validation"
+  },
+  "tray": {
+    "noContainer": "Select container",
+    "buildCargo": "Build cargo",
+    "items": "items",
+    "alerts": "Alerts",
+    "open": "Open"
+  },
+  "mediaPopup": {
+    "eyebrow": "On the field",
+    "plots": "plots mapped",
+    "close": "Close",
+    "videoBadge": "Field · video",
+    "noMedia": "No approved photos yet · under consultation",
+    "varieties": "Varieties",
+    "plotsOnMap": "Plots on map",
+    "added": "In plan",
+    "addPrimary": "Add {variety}",
+    "subjectToValidation": "Subject to Luma validation"
+  },
+  "builder": {
+    "eyebrow": "Container Builder",
+    "title": "Configure your cargo",
+    "subtitle": "Pick a container, adjust quantities and review operational alerts.",
+    "close": "Close",
+    "selectContainer": "Select container",
+    "preview": "Interior view",
+    "approximationDisclaimer": "Commercial estimate based on weight and pallet count (EUR standard). Volumetric optimization, stacking and phytosanitary fit are validated by Luma operations.",
+    "loadItems": "Loaded items",
+    "emptyItems": "No items loaded yet. Open a product and add varieties to the plan.",
+    "emptyItemsHint": "Open the catalog on the right and add varieties.",
+    "boxes": "Boxes",
+    "pallets": "Pallets",
+    "removeItem": "Remove item",
+    "alerts": "Alerts and reviews",
+    "configuredTemp": "Configured temperature",
+    "clearAll": "Clear all",
+    "done": "Done",
+    "reviewAndSubmit": "Review and submit proposal",
+    "subjectToValidation": "Subject to Luma validation",
+    "metrics": {
+      "weight": "Weight",
+      "pallets": "Pallets",
+      "occupation": "Occupation",
+      "overall": "Worst case weight/pallets"
+    }
+  },
+  "review": {
+    "eyebrow": "Proposal summary",
+    "title": "Review and submit to Luma",
+    "subtitle": "Confirm the details. Luma validates commercial, operational and documentary aspects before any confirmation.",
+    "successTitle": "Proposal submitted to Luma",
+    "successSubtitle": "You will receive an update at the provided e-mail.",
+    "close": "Close",
+    "destination": "Destination",
+    "country": "Country",
+    "city": "City",
+    "port": "Port",
+    "incoterm": "Incoterm",
+    "container": "Container",
+    "noContainer": "No container selected.",
+    "loadItems": "Load items",
+    "noItems": "No items loaded.",
+    "operationalReview": "Operational review required",
+    "buyerInfo": "Buyer details",
+    "legalName": "Legal name",
+    "legalNamePlaceholder": "e.g. NorthSea Fresh Importers B.V.",
+    "displayName": "Display name",
+    "optional": "Optional",
+    "type": "Operation type",
+    "selectType": "Select",
+    "contactName": "Contact",
+    "contactEmail": "Contact e-mail",
+    "buyerNote": "Notes for Luma",
+    "buyerNotePlaceholder": "Desired timeline, special conditions, logistics preferences…",
+    "submit": "Submit proposal",
+    "submitting": "Submitting…",
+    "submitError": "Submission failed",
+    "hasCriticalAlerts": "There are critical cargo alerts. Adjust in the Container Builder before submitting.",
+    "subjectToValidation": "Subject to Luma validation",
+    "success": {
+      "referenceLabel": "Proposal reference",
+      "body": "We have received your proposal. Our commercial team will triage, then operations and compliance will assess it. You will hear back at the e-mail provided.",
+      "newProposal": "Start a new proposal"
+    }
+  },
+  "loadPlan": {
+    "alerts": {
+      "empty": "Load plan is empty. Add at least one item.",
+      "overweight": "Load above limit: {totalKg} kg configured, max {maxKg} kg ({overKg} kg over).",
+      "overPallets": "Pallets above limit: {total} allocated, max {max}.",
+      "frozenFreshMix": "Frozen × fresh mixed load — requires Luma operational validation.",
+      "temperatureConflict": "Items with incompatible temperature ranges — review needed.",
+      "dryContainerNeedsReefer": "Dry container carrying refrigerated item — must swap to reefer.",
+      "reeferForDryOnly": "Reefer carrying dry-only items — consider dry container for cost savings."
+    }
   }
 }

@@ -32,6 +32,9 @@ export const authConfig: NextAuthConfig = {
     async session({ session, user }) {
       if (session.user && user) {
         session.user.id = user.id;
+        // Prisma User tem role — propagamos para a sessão
+        session.user.role = (user as typeof user & { role?: string }).role;
+        session.user.locale = (user as typeof user & { locale?: string }).locale;
       }
       return session;
     },
