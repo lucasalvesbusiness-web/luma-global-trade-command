@@ -27,17 +27,25 @@ export function CanvasHUD() {
   };
 
   const atOrigin = stage === 'originReveal';
+  const inIntro = stage === 'intro' || stage === 'destinationSelection';
 
   return (
     <div className="pointer-events-none fixed inset-x-0 top-0 z-30 flex items-start justify-between p-5 md:p-6">
-      <div className="pointer-events-auto">
-        <p className="text-[0.68rem] uppercase tracking-[0.4em] text-luma-olive/80">
-          Luma × Spectre
-        </p>
-        <p className="mt-0.5 font-display text-base font-light text-luma-ink/90">
-          Global Trade Command
-        </p>
-      </div>
+      {/* Durante o intro o IntroPane já exibe a marca LUMA dominante —
+          escondemos aqui para não duplicar. No Vale (originReveal) ou em
+          transição, aparece compacta como assinatura do canvas. */}
+      {!inIntro ? (
+        <div className="pointer-events-auto">
+          <p className="font-display text-2xl font-light tracking-[0.18em] text-luma-ink/90">
+            LUMA
+          </p>
+          <p className="mt-0.5 text-[0.62rem] uppercase tracking-[0.34em] text-luma-olive/80">
+            Global Trade Command
+          </p>
+        </div>
+      ) : (
+        <div />
+      )}
 
       <div className="pointer-events-auto flex items-center gap-2">
         {atOrigin && (
