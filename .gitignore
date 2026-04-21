@@ -58,3 +58,6 @@ public/imagery/field/**/*.png
 # logs
 logs/
 *.log
+
+.vercel
+.env.neon
