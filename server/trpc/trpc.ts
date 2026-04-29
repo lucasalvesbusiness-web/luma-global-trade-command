@@ -40,3 +40,51 @@ export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
   }
   return next({ ctx: { ...ctx, session: ctx.session } });
 });
+
+/**
+ * Procedure que exige usuário com role ADMIN. Usada pelas rotas do Admin Console.
+ */
+export const adminProcedure = t.procedure.use(async ({ ctx, next }) => {
+  const userId = ctx.session?.user?.id;
+  if (!userId) {
+    throw new TRPCError({ code: 'UNAUTHORIZED' });
+  }
+  if (ctx.session?.user?.role !== 'ADMIN') {
+    throw new TRPCError({ code: 'FORBIDDEN', message: 'Admin only' });
+  }
+  return next({
+    ctx: {
+      ...ctx,
+      session: ctx.session,
+      admin: { userId },
+    },
+  });
+});
+
+/**
+ * Procedure que exige usuário autenticado com role STAFF ou ADMIN.
+ * Usada pelas rotas do Internal Control View.
+ */
+export const staffProcedure = t.procedure.use(async ({ ctx, next }) => {
+  const userId = ctx.session?.user?.id;
+  if (!userId) {
+    throw new TRPCError({ code: 'UNAUTHORIZED' });
+  }
+  const role = ctx.session?.user?.role;
+  if (role !== 'STAFF' && role !== 'ADMIN') {
+    throw new TRPCError({ code: 'FORBIDDEN', message: 'Staff only' });
+  }
+  // Busca o staff member para obter o team
+  const staff = await ctx.db.staffMember.findUnique({ where: { userId } });
+  return next({
+    ctx: {
+      ...ctx,
+      session: ctx.session,
+      staff: {
+        userId,
+        team: staff?.team ?? (role === 'ADMIN' ? 'ADMIN' : null),
+        title: staff?.title ?? null,
+      },
+    },
+  });
+});
