@@ -21,6 +21,7 @@ enum UserRole {
   BUYER
   STAFF
   ADMIN
+  FIELD_OPERATOR
 }
 
 enum StaffTeam {
@@ -54,11 +55,14 @@ model User {
   sessions Session[]
   buyer    Buyer?
   staff    StaffMember?
+  fieldOperator FieldOperator?
 
   createdProposals   Proposal[]     @relation("ProposalCreatedBy")
   proposalNotes      ProposalNote[]
   auditEvents        AuditEvent[]
-  approvedFieldPhotos FieldPhoto[] @relation("FieldPhotoApprover")
+  approvedFieldPhotos FieldPhoto[]  @relation("FieldPhotoApprover")
+  photoSubmissions    PhotoSubmission[] @relation("PhotoSubmissionAuthor")
+  archivedOrigins     Origin[]      @relation("OriginArchivedBy")
 
   @@map("users")
 }
@@ -220,10 +224,13 @@ model Origin {
   lng                     Float?
   statusBlurb             String?
   approvedCertifications  String[]
+  archivedAt              DateTime?
+  archivedById            String?      @db.Uuid
   createdAt               DateTime     @default(now())
   updatedAt               DateTime     @updatedAt
 
   region          OriginRegion     @relation(fields: [regionId], references: [id])
+  archivedBy      User?            @relation("OriginArchivedBy", fields: [archivedById], references: [id])
   fieldPlots      FieldPlot[]
   packingHouses   PackingHouse[]
   coldChambers    ColdChamber[]
@@ -232,7 +239,9 @@ model Origin {
   availabilities  Availability[]
   harvestWindows  HarvestWindow[]
   fieldUpdates    FieldUpdate[]
+  fieldOperators  FieldOperator[]
 
+  @@index([archivedAt])
   @@map("origins")
 }
 
@@ -245,10 +254,64 @@ model FieldPlot {
   lat      Float?
   lng      Float?
 
-  origin       Origin        @relation(fields: [originId], references: [id], onDelete: Cascade)
+  origin       Origin            @relation(fields: [originId], references: [id], onDelete: Cascade)
   fieldUpdates FieldUpdate[]
+  routine      PhotoRoutine?
+  submissions  PhotoSubmission[]
 
   @@map("field_plots")
+}
+
+// ============================================================
+// Field Operators & Photo Routines
+// ============================================================
+
+model FieldOperator {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @unique @db.Uuid
+  originId  String   @db.Uuid
+  title     String?
+  createdAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  origin Origin @relation(fields: [originId], references: [id], onDelete: Cascade)
+
+  @@index([originId])
+  @@map("field_operators")
+}
+
+model PhotoRoutine {
+  id                String   @id @default(uuid()) @db.Uuid
+  fieldPlotId       String   @unique @db.Uuid
+  cadenceDays       Int      @default(7)
+  minPhotosPerCycle Int      @default(3)
+  active            Boolean  @default(true)
+  instructions      String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  fieldPlot FieldPlot @relation(fields: [fieldPlotId], references: [id], onDelete: Cascade)
+
+  @@map("photo_routines")
+}
+
+model PhotoSubmission {
+  id            String   @id @default(uuid()) @db.Uuid
+  fieldPlotId   String   @db.Uuid
+  submittedById String   @db.Uuid
+  submittedAt   DateTime @default(now())
+  cycleStart    DateTime
+  cycleEnd      DateTime
+  notes         String?
+  createdAt     DateTime @default(now())
+
+  fieldPlot   FieldPlot    @relation(fields: [fieldPlotId], references: [id], onDelete: Cascade)
+  submittedBy User         @relation("PhotoSubmissionAuthor", fields: [submittedById], references: [id])
+  photos      FieldPhoto[]
+
+  @@index([fieldPlotId, submittedAt])
+  @@index([cycleStart, cycleEnd])
+  @@map("photo_submissions")
 }
 
 model PackingHouse {
@@ -461,7 +524,8 @@ model FieldUpdate {
 
 model FieldPhoto {
   id                    String    @id @default(uuid()) @db.Uuid
-  fieldUpdateId         String    @db.Uuid
+  fieldUpdateId         String?   @db.Uuid
+  submissionId          String?   @db.Uuid
   storagePath           String
   caption               String?
   approvedForBuyerView  Boolean   @default(false)
@@ -469,9 +533,11 @@ model FieldPhoto {
   approvedAt            DateTime?
   createdAt             DateTime  @default(now())
 
-  fieldUpdate   FieldUpdate @relation(fields: [fieldUpdateId], references: [id], onDelete: Cascade)
-  approvedBy    User?       @relation("FieldPhotoApprover", fields: [approvedByUserId], references: [id])
+  fieldUpdate   FieldUpdate?     @relation(fields: [fieldUpdateId], references: [id], onDelete: Cascade)
+  submission    PhotoSubmission? @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  approvedBy    User?            @relation("FieldPhotoApprover", fields: [approvedByUserId], references: [id])
 
+  @@index([submissionId])
   @@map("field_photos")
 }
 

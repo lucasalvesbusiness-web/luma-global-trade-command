@@ -113,18 +113,23 @@ export function AdminPhotoApprovalClient() {
               <div className="space-y-2 px-4 py-3">
                 <div className="flex items-center justify-between gap-2">
                   <p className="text-[11px] uppercase tracking-[0.22em] text-luma-olive/85">
-                    {p.fieldUpdate.origin.name}
+                    {p.fieldUpdate?.origin.name ?? '—'}
                   </p>
                   <p className="text-[10.5px] text-luma-ink/55">
-                    {new Date(p.fieldUpdate.observedAt).toLocaleDateString()}
+                    {p.fieldUpdate
+                      ? new Date(p.fieldUpdate.observedAt).toLocaleDateString()
+                      : ''}
                   </p>
                 </div>
                 <p className="text-[12.5px] text-luma-ink/85 min-h-[2.4em]">
                   {p.caption ?? <span className="text-luma-ink/40">sem legenda</span>}
                 </p>
-                <p className="text-[10.5px] text-luma-ink/55">
-                  Estágio: {p.fieldUpdate.stage.toLowerCase().replaceAll('_', ' ')}
-                </p>
+                {p.fieldUpdate && (
+                  <p className="text-[10.5px] text-luma-ink/55">
+                    Estágio:{' '}
+                    {p.fieldUpdate.stage.toLowerCase().replaceAll('_', ' ')}
+                  </p>
+                )}
                 {approved && p.approvedBy && (
                   <p className="text-[10.5px] text-luma-ink/55">
                     Aprovada por {p.approvedBy.name ?? p.approvedBy.email}
