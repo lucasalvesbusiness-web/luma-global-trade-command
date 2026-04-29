@@ -207,17 +207,56 @@ export type SeedComplianceGate = {
   status:
     | 'PREVIEW_AVAILABLE'
     | 'DOCUMENTATION_REQUIRED'
-    | 'SUBJECT_TO_FINAL_VALIDATION';
+    | 'SUBJECT_TO_FINAL_VALIDATION'
+    | 'BLOCKED';
   notesPtBr?: string;
   notesEn?: string;
 };
 
-export const seedComplianceGates: SeedComplianceGate[] = seedPhytoRequirements.map(
-  (req) => ({
+const ALL_PRODUCT_SLUGS = [
+  'mango',
+  'grape',
+  'banana',
+  'fruit-pulp',
+  'acai',
+  'cassava-flour',
+  'cassava-starch',
+] as const;
+
+const ALL_COUNTRY_ISO2 = ['NL', 'ES', 'PT', 'AE', 'US', 'BR'] as const;
+
+const reqKeys = new Set(
+  seedPhytoRequirements.map((r) => `${r.productSlug}::${r.countryIso2}`),
+);
+
+/**
+ * Matriz completa 7 produtos × 6 países = 42 células.
+ * Pares com requirements → PREVIEW_AVAILABLE.
+ * Pares ainda não suportados → BLOCKED com nota explicativa
+ * (admin pode reclassificar via /admin/requirements).
+ */
+export const seedComplianceGates: SeedComplianceGate[] = [
+  ...seedPhytoRequirements.map<SeedComplianceGate>((req) => ({
     productSlug: req.productSlug,
     countryIso2: req.countryIso2,
     status: 'PREVIEW_AVAILABLE',
     notesPtBr: 'Lista preliminar — sujeita à validação final da Luma.',
     notesEn: 'Preliminary list — subject to final validation by Luma.',
-  }),
-);
+  })),
+  ...ALL_PRODUCT_SLUGS.flatMap((productSlug) =>
+    ALL_COUNTRY_ISO2.flatMap<SeedComplianceGate>((countryIso2) => {
+      if (reqKeys.has(`${productSlug}::${countryIso2}`)) return [];
+      return [
+        {
+          productSlug,
+          countryIso2,
+          status: 'BLOCKED',
+          notesPtBr:
+            'Combinação ainda não habilitada para este destino. Sob avaliação técnica da Luma.',
+          notesEn:
+            'Combination not yet enabled for this destination. Under Luma technical review.',
+        },
+      ];
+    }),
+  ),
+];
