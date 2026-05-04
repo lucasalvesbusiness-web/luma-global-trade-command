@@ -85,9 +85,17 @@ export default async function SignInPage({
           </p>
         )}
 
-        <p className="mt-6 text-[11px] uppercase tracking-[0.25em] text-luma-ink/55">
-          Dev · e-mails aparecem em http://localhost:8025
-        </p>
+        <div className="mt-6 flex items-center justify-between gap-3">
+          <a
+            href="/signup"
+            className="text-[11px] uppercase tracking-[0.22em] text-luma-olive/85 hover:text-luma-olive"
+          >
+            Solicitar cadastro
+          </a>
+          <p className="text-[10.5px] uppercase tracking-[0.22em] text-luma-ink/45">
+            Dev · http://localhost:8025
+          </p>
+        </div>
       </div>
     </main>
   );

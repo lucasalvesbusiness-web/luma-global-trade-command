@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { Camera, CalendarRange, FileCheck, LayoutDashboard, LogOut, Package, Warehouse } from 'lucide-react';
+import { Building2, Camera, CalendarRange, FileCheck, LayoutDashboard, LogOut, Package, Sprout, Users, Warehouse } from 'lucide-react';
 
 import { auth, signOut } from '@/server/auth/config';
 
@@ -24,11 +24,14 @@ export default async function AdminLayout({
 
   const navItems = [
     { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
+    { href: '/admin/origins', label: 'Fazendas', icon: Sprout },
     { href: '/admin/products', label: 'Produtos', icon: Package },
     { href: '/admin/availability', label: 'Disponibilidade', icon: Warehouse },
     { href: '/admin/harvest-windows', label: 'Colheitas', icon: CalendarRange },
     { href: '/admin/photos', label: 'Fotos', icon: Camera },
     { href: '/admin/requirements', label: 'Requisitos', icon: FileCheck },
+    { href: '/admin/buyers', label: 'Compradores', icon: Building2 },
+    { href: '/admin/staff', label: 'Equipe', icon: Users },
   ];
 
   return (
