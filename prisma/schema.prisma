@@ -40,6 +40,13 @@ enum BuyerCompanyType {
   TRADER
 }
 
+enum BuyerApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  BLOCKED
+}
+
 model User {
   id            String    @id @default(uuid()) @db.Uuid
   email         String    @unique @db.Citext
@@ -63,6 +70,7 @@ model User {
   approvedFieldPhotos FieldPhoto[]  @relation("FieldPhotoApprover")
   photoSubmissions    PhotoSubmission[] @relation("PhotoSubmissionAuthor")
   archivedOrigins     Origin[]      @relation("OriginArchivedBy")
+  approvedBuyerCompanies BuyerCompany[] @relation("BuyerCompanyApprovedBy")
 
   @@map("users")
 }
@@ -109,24 +117,35 @@ model VerificationToken {
 }
 
 model BuyerCompany {
-  id                     String           @id @default(uuid()) @db.Uuid
+  id                     String              @id @default(uuid()) @db.Uuid
   legalName              String
   displayName            String?
   type                   BuyerCompanyType
-  countryIso2            String           @db.Char(2)
+  countryIso2            String              @db.Char(2)
   city                   String?
   address                String?
-  defaultPortId          String?          @db.Uuid
+  defaultPortId          String?             @db.Uuid
   defaultIncoterm        String?
   estimatedMonthlyVolume String?
-  createdAt              DateTime         @default(now())
-  updatedAt              DateTime         @updatedAt
+  taxId                  String?
+  contactPhone           String?
+  productsOfInterest     String[]            @default([])
+  targetMarkets          String[]            @default([])
+  approvalStatus         BuyerApprovalStatus @default(PENDING)
+  approvedById           String?             @db.Uuid
+  approvedAt             DateTime?
+  rejectionReason        String?
+  onboardingCompletedAt  DateTime?
+  createdAt              DateTime            @default(now())
+  updatedAt              DateTime            @updatedAt
 
   country       Country    @relation(fields: [countryIso2], references: [iso2])
   defaultPort   Port?      @relation(fields: [defaultPortId], references: [id])
+  approvedBy    User?      @relation("BuyerCompanyApprovedBy", fields: [approvedById], references: [id])
   buyers        Buyer[]
   proposals     Proposal[]
 
+  @@index([approvalStatus])
   @@map("buyer_companies")
 }
 
@@ -726,20 +745,26 @@ model ProposalNote {
   @@map("proposal_notes")
 }
 
+// Polymorphic audit log. `entity` is a free-text discriminator (e.g. 'Proposal',
+// 'StaffMember', 'BuyerCompany', 'FieldPhoto'); `entityId` holds the target id with
+// no FK so any entity can be referenced. When `entity = 'Proposal'`, mirror the id
+// into `proposalId` so the explicit FK + back-relation `Proposal.auditEvents` works.
 model AuditEvent {
   id         String   @id @default(uuid()) @db.Uuid
   entity     String
   entityId   String   @db.Uuid
+  proposalId String?  @db.Uuid
   actorId    String?  @db.Uuid
   fromStatus String?
   toStatus   String?
   diffJson   Json?
   occurredAt DateTime @default(now())
 
-  proposal Proposal? @relation(fields: [entityId], references: [id], onDelete: Cascade, map: "audit_events_proposal_fk")
+  proposal Proposal? @relation(fields: [proposalId], references: [id], onDelete: Cascade, map: "audit_events_proposal_fk")
   actor    User?     @relation(fields: [actorId], references: [id])
 
   @@index([entity, entityId])
+  @@index([proposalId])
   @@index([occurredAt])
   @@map("audit_events")
 }

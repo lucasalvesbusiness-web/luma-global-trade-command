@@ -575,6 +575,7 @@ async function seedProposalData(): Promise<void> {
       data: {
         entity: 'Proposal',
         entityId: proposal.id,
+        proposalId: proposal.id,
         actorId: buyerUser.id,
         fromStatus: 'DRAFT',
         toStatus: 'SUBMITTED',
