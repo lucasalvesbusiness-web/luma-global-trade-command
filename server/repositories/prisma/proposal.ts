@@ -14,12 +14,106 @@ import type {
 } from '../types';
 
 export function makePrismaProposalRepository(db: PrismaClient): ProposalRepository {
+  async function loadProposalById(id: string): Promise<ProposalDetail | null> {
+    const row = await db.proposal.findUnique({
+      where: { id },
+      include: {
+        buyerCompany: true,
+        destinationCountry: true,
+        destinationPort: true,
+        createdBy: true,
+        loadPlan: {
+          include: {
+            containerType: true,
+            items: { include: { product: true, variety: true } },
+          },
+        },
+        notes: { include: { author: true }, orderBy: { createdAt: 'desc' } },
+        auditEvents: { include: { actor: true }, orderBy: { occurredAt: 'desc' } },
+      },
+    });
+    if (!row) return null;
+
+    const lp = row.loadPlan;
+    const totalBoxes = lp?.items.reduce((s, it) => s + it.qtyBoxes, 0) ?? 0;
+    const totalPallets = lp?.items.reduce((s, it) => s + it.qtyPallets, 0) ?? 0;
+    const totalWeightKg = lp?.items.reduce((s, it) => s + it.totalWeightKg, 0) ?? 0;
+
+    return {
+      id: row.id,
+      reference: row.reference,
+      status: row.status as ProposalStatus,
+      incoterm: row.incoterm,
+      submittedAt: row.submittedAt,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+      buyerCompany: {
+        id: row.buyerCompany.id,
+        legalName: row.buyerCompany.legalName,
+        displayName: row.buyerCompany.displayName,
+        countryIso2: row.buyerCompany.countryIso2,
+        type: row.buyerCompany.type,
+      },
+      destinationCountry: {
+        iso2: row.destinationCountry.iso2,
+        name: row.destinationCountry.name,
+      },
+      destinationPort: row.destinationPort
+        ? { id: row.destinationPort.id, name: row.destinationPort.name, code: row.destinationPort.code }
+        : null,
+      loadPlan: lp
+        ? {
+            containerCode: lp.containerType.code,
+            configuredTempC: lp.configuredTempC,
+            itemsCount: lp.items.length,
+            totalBoxes,
+            totalPallets,
+            totalWeightKg,
+          }
+        : null,
+      buyerContactEmail: row.createdBy?.email ?? null,
+      buyerContactName: row.createdBy?.name ?? null,
+      buyerCity: row.buyerCompany.city,
+      buyerAddress: row.buyerCompany.address,
+      items:
+        lp?.items.map((it) => ({
+          id: it.id,
+          productSlug: it.product.slug,
+          productName: it.product.name,
+          varietyName: it.variety?.name ?? null,
+          qtyBoxes: it.qtyBoxes,
+          qtyPallets: it.qtyPallets,
+          totalWeightKg: it.totalWeightKg,
+        })) ?? [],
+      notes: row.notes.map((n) => ({
+        id: n.id,
+        authorName: n.author?.name ?? null,
+        authorEmail: n.author?.email ?? '',
+        team: (n.team ?? null) as StaffTeam | null,
+        kind: n.kind as ProposalNoteKind,
+        body: n.body,
+        createdAt: n.createdAt,
+      })),
+      auditTrail: row.auditEvents.map((e) => ({
+        id: e.id,
+        actorName: e.actor?.name ?? null,
+        actorEmail: e.actor?.email ?? null,
+        fromStatus: e.fromStatus,
+        toStatus: e.toStatus,
+        occurredAt: e.occurredAt,
+      })),
+    };
+  }
+
   return {
     async list(opts): Promise<ProposalListItem[]> {
       const rows = await db.proposal.findMany({
-        where: opts?.statuses
-          ? { status: { in: opts.statuses as PrismaProposalStatus[] } }
-          : undefined,
+        where: {
+          ...(opts?.statuses && {
+            status: { in: opts.statuses as PrismaProposalStatus[] },
+          }),
+          ...(opts?.companyIds && { buyerCompanyId: { in: opts.companyIds } }),
+        },
         include: {
           buyerCompany: true,
           destinationCountry: true,
@@ -74,105 +168,15 @@ export function makePrismaProposalRepository(db: PrismaClient): ProposalReposito
       });
     },
 
-    async findById(id): Promise<ProposalDetail | null> {
+    findById: loadProposalById,
+
+    async findByReference(reference): Promise<ProposalDetail | null> {
       const row = await db.proposal.findUnique({
-        where: { id },
-        include: {
-          buyerCompany: true,
-          destinationCountry: true,
-          destinationPort: true,
-          createdBy: true,
-          loadPlan: {
-            include: {
-              containerType: true,
-              items: { include: { product: true, variety: true } },
-            },
-          },
-          notes: {
-            include: { author: true },
-            orderBy: { createdAt: 'desc' },
-          },
-          auditEvents: {
-            include: { actor: true },
-            orderBy: { occurredAt: 'desc' },
-          },
-        },
+        where: { reference },
+        select: { id: true },
       });
       if (!row) return null;
-
-      const lp = row.loadPlan;
-      const totalBoxes = lp?.items.reduce((s, it) => s + it.qtyBoxes, 0) ?? 0;
-      const totalPallets = lp?.items.reduce((s, it) => s + it.qtyPallets, 0) ?? 0;
-      const totalWeightKg = lp?.items.reduce((s, it) => s + it.totalWeightKg, 0) ?? 0;
-
-      return {
-        id: row.id,
-        reference: row.reference,
-        status: row.status as ProposalStatus,
-        incoterm: row.incoterm,
-        submittedAt: row.submittedAt,
-        createdAt: row.createdAt,
-        updatedAt: row.updatedAt,
-        buyerCompany: {
-          id: row.buyerCompany.id,
-          legalName: row.buyerCompany.legalName,
-          displayName: row.buyerCompany.displayName,
-          countryIso2: row.buyerCompany.countryIso2,
-          type: row.buyerCompany.type,
-        },
-        destinationCountry: {
-          iso2: row.destinationCountry.iso2,
-          name: row.destinationCountry.name,
-        },
-        destinationPort: row.destinationPort
-          ? {
-              id: row.destinationPort.id,
-              name: row.destinationPort.name,
-              code: row.destinationPort.code,
-            }
-          : null,
-        loadPlan: lp
-          ? {
-              containerCode: lp.containerType.code,
-              configuredTempC: lp.configuredTempC,
-              itemsCount: lp.items.length,
-              totalBoxes,
-              totalPallets,
-              totalWeightKg,
-            }
-          : null,
-        buyerContactEmail: row.createdBy?.email ?? null,
-        buyerContactName: row.createdBy?.name ?? null,
-        buyerCity: row.buyerCompany.city,
-        buyerAddress: row.buyerCompany.address,
-        items:
-          lp?.items.map((it) => ({
-            id: it.id,
-            productSlug: it.product.slug,
-            productName: it.product.name,
-            varietyName: it.variety?.name ?? null,
-            qtyBoxes: it.qtyBoxes,
-            qtyPallets: it.qtyPallets,
-            totalWeightKg: it.totalWeightKg,
-          })) ?? [],
-        notes: row.notes.map((n) => ({
-          id: n.id,
-          authorName: n.author?.name ?? null,
-          authorEmail: n.author?.email ?? '',
-          team: (n.team ?? null) as StaffTeam | null,
-          kind: n.kind as ProposalNoteKind,
-          body: n.body,
-          createdAt: n.createdAt,
-        })),
-        auditTrail: row.auditEvents.map((e) => ({
-          id: e.id,
-          actorName: e.actor?.name ?? null,
-          actorEmail: e.actor?.email ?? null,
-          fromStatus: e.fromStatus,
-          toStatus: e.toStatus,
-          occurredAt: e.occurredAt,
-        })),
-      };
+      return loadProposalById(row.id);
     },
 
     async updateStatus(input) {

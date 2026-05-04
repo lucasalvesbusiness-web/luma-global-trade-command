@@ -5,6 +5,7 @@ import {
   allowedNextStatuses,
   isTransitionAllowed,
 } from '@/server/services/proposal-workflow';
+import { applyProposalTransition } from '@/server/services/proposal-transitions';
 import type { StaffTeam } from '@/server/repositories/types';
 
 import { router, staffProcedure } from '../trpc';
@@ -93,7 +94,7 @@ export const internalRouter = router({
         });
       }
 
-      await ctx.repos.proposal.updateStatus({
+      await applyProposalTransition({
         proposalId: input.proposalId,
         fromStatus: input.fromStatus,
         toStatus: input.toStatus,

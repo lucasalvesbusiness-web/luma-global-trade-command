@@ -1,8 +1,11 @@
+import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 
 import { submitProposalFromDraft } from '@/server/services/proposal';
+import { applyProposalTransition } from '@/server/services/proposal-transitions';
+import { sendProposalNotification } from '@/server/mail/proposal-notification';
 
-import { publicProcedure, router } from '../trpc';
+import { buyerProcedure, publicProcedure, router } from '../trpc';
 
 const containerCodeSchema = z.enum([
   'C_20_RF',
@@ -60,9 +63,95 @@ export const proposalRouter = router({
   /**
    * Submete uma proposta a partir do draft client-side.
    * Cria BuyerCompany + User + Proposal + LoadPlan + LoadItems + AuditEvent.
-   * Dispara e-mail interno para o time comercial (best-effort).
+   * Dispara e-mail interno para o time comercial e confirmação ao comprador.
    */
   submit: publicProcedure
     .input(submitInput)
     .mutation(({ input }) => submitProposalFromDraft(input)),
+
+  /**
+   * Lista as propostas do BuyerCompany do usuário logado.
+   * Resolvido via session.user.id → Buyer → BuyerCompany.id, garantindo que
+   * um buyer só vê suas próprias propostas.
+   */
+  listMine: buyerProcedure.query(({ ctx }) =>
+    ctx.repos.proposal.list({ companyIds: [ctx.buyer.companyId] }),
+  ),
+
+  /**
+   * Detalhe de uma proposta do buyer logado, indexada pela `reference` legível.
+   */
+  getMine: buyerProcedure
+    .input(z.object({ reference: z.string().min(2).max(60) }))
+    .query(async ({ ctx, input }) => {
+      const detail = await ctx.repos.proposal.findByReference(input.reference);
+      if (!detail || detail.buyerCompany.id !== ctx.buyer.companyId) {
+        throw new TRPCError({ code: 'NOT_FOUND' });
+      }
+      return detail;
+    }),
+
+  /**
+   * Re-submete proposta após ADJUSTMENT_REQUESTED.
+   * Volta para UNDER_COMMERCIAL_REVIEW, registra ProposalNote (FROM_BUYER) com
+   * a mensagem do comprador, e notifica o time interno.
+   */
+  resubmit: buyerProcedure
+    .input(
+      z.object({
+        reference: z.string().min(2).max(60),
+        body: z.string().min(2).max(1200).trim(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const proposal = await ctx.db.proposal.findUnique({
+        where: { reference: input.reference },
+        select: {
+          id: true,
+          buyerCompanyId: true,
+          status: true,
+          reference: true,
+          destinationCountryIso: true,
+          buyerCompany: { select: { legalName: true } },
+          createdBy: { select: { name: true } },
+          loadPlan: {
+            select: { containerType: { select: { code: true } }, _count: { select: { items: true } } },
+          },
+        },
+      });
+      if (!proposal || proposal.buyerCompanyId !== ctx.buyer.companyId) {
+        throw new TRPCError({ code: 'NOT_FOUND' });
+      }
+      if (proposal.status !== 'ADJUSTMENT_REQUESTED') {
+        throw new TRPCError({
+          code: 'CONFLICT',
+          message: `Cannot resubmit while status is ${proposal.status}`,
+        });
+      }
+
+      await applyProposalTransition({
+        proposalId: proposal.id,
+        fromStatus: 'ADJUSTMENT_REQUESTED',
+        toStatus: 'UNDER_COMMERCIAL_REVIEW',
+        actorUserId: ctx.buyer.userId,
+        actorTeam: null,
+        note: { body: input.body, kind: 'FROM_BUYER' },
+      });
+
+      // Notifica o time interno que o buyer respondeu.
+      try {
+        await sendProposalNotification({
+          reference: proposal.reference,
+          buyerLegalName: proposal.buyerCompany.legalName,
+          buyerContactName: proposal.createdBy?.name ?? ctx.buyer.companyLegalName,
+          destinationCountryIso2: proposal.destinationCountryIso,
+          itemsCount: proposal.loadPlan?._count.items ?? 0,
+          containerCode: proposal.loadPlan?.containerType.code ?? '—',
+        });
+      } catch (err) {
+        console.warn('[proposal.resubmit] internal mail failed', err);
+      }
+
+      return { ok: true as const };
+    }),
 });

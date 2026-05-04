@@ -153,7 +153,7 @@ export type ProposalStatus =
 
 export type StaffTeam = 'COMMERCIAL' | 'OPERATIONS' | 'COMPLIANCE' | 'ADMIN';
 
-export type ProposalNoteKind = 'INTERNAL' | 'TO_BUYER';
+export type ProposalNoteKind = 'INTERNAL' | 'TO_BUYER' | 'FROM_BUYER';
 
 export type ProposalListItem = {
   id: string;

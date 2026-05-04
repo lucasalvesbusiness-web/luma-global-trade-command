@@ -5,6 +5,7 @@
 
 import { db } from '@/lib/db';
 import { sendProposalNotification } from '@/server/mail/proposal-notification';
+import { sendProposalReceivedBuyer } from '@/server/mail/proposal-received-buyer';
 import { findPort as findSeedPort } from '@/data/seed/ports';
 
 const UUID_RE =
@@ -215,7 +216,9 @@ export async function submitProposalFromDraft(
     return p;
   });
 
-  // 4) Notificação interna (best-effort — falha não derruba a submissão)
+  // 4) Notificações best-effort — falhas nunca derrubam a submissão.
+  const baseUrl =
+    process.env.AUTH_URL ?? process.env.NEXTAUTH_URL ?? 'http://localhost:3000';
   try {
     await sendProposalNotification({
       reference,
@@ -226,7 +229,20 @@ export async function submitProposalFromDraft(
       containerCode: input.container.code,
     });
   } catch (err) {
-    console.warn('[proposal] failed to send notification e-mail', err);
+    console.warn('[proposal] failed to send internal notification', err);
+  }
+  try {
+    await sendProposalReceivedBuyer({
+      to: input.buyer.contactEmail,
+      buyerContactName: input.buyer.contactName,
+      reference,
+      itemsCount: input.items.length,
+      destinationCountryIso2: input.destinationCountryIso2,
+      containerCode: input.container.code,
+      baseUrl,
+    });
+  } catch (err) {
+    console.warn('[proposal] failed to send buyer receipt', err);
   }
 
   return {

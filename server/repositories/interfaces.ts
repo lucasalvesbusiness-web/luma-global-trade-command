@@ -55,8 +55,12 @@ export interface FieldRepository {
 }
 
 export interface ProposalRepository {
-  list(opts?: { statuses?: ProposalStatus[] }): Promise<ProposalListItem[]>;
+  list(opts?: {
+    statuses?: ProposalStatus[];
+    companyIds?: string[];
+  }): Promise<ProposalListItem[]>;
   findById(id: string): Promise<ProposalDetail | null>;
+  findByReference(reference: string): Promise<ProposalDetail | null>;
   updateStatus(input: {
     proposalId: string;
     fromStatus: ProposalStatus;

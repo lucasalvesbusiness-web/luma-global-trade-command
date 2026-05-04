@@ -704,6 +704,7 @@ enum ProposalStatus {
 enum ProposalNoteKind {
   INTERNAL
   TO_BUYER
+  FROM_BUYER
 }
 
 model Proposal {
