@@ -205,6 +205,7 @@ export async function submitProposalFromDraft(
       data: {
         entity: 'Proposal',
         entityId: p.id,
+        proposalId: p.id,
         actorId: user.id,
         fromStatus: 'DRAFT',
         toStatus: 'SUBMITTED',

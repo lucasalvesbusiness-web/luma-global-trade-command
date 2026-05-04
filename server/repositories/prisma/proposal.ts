@@ -198,6 +198,7 @@ export function makePrismaProposalRepository(db: PrismaClient): ProposalReposito
           data: {
             entity: 'Proposal',
             entityId: input.proposalId,
+            proposalId: input.proposalId,
             actorId: input.actorUserId,
             fromStatus: input.fromStatus,
             toStatus: input.toStatus,

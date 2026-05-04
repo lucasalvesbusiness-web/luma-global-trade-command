@@ -16,6 +16,7 @@ export const authConfig: NextAuthConfig = {
       server: {
         host: smtpHost,
         port: smtpPort,
+        secure: smtpPort === 465,
         auth:
           process.env.SMTP_USER && process.env.SMTP_PASSWORD
             ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASSWORD }

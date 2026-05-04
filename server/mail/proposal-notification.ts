@@ -5,7 +5,12 @@
  * via env vars.
  */
 
-import nodemailer from 'nodemailer';
+import {
+  SMTP_FROM,
+  SMTP_INTERNAL_INBOX,
+  shouldSkipSmtp,
+  smtpTransport,
+} from './transport';
 
 type Payload = {
   reference: string;
@@ -16,34 +21,13 @@ type Payload = {
   containerCode: string;
 };
 
-const smtpHost = process.env.SMTP_HOST ?? 'localhost';
-const smtpPort = Number(process.env.SMTP_PORT ?? 1025);
-const smtpFrom = process.env.SMTP_FROM ?? 'Luma Global Trade Command <no-reply@luma.local>';
-const smtpUser = process.env.SMTP_USER;
-const smtpPass = process.env.SMTP_PASSWORD;
-const internalInbox = process.env.LUMA_INTERNAL_INBOX ?? 'commercial@luma.local';
-
 export async function sendProposalNotification(payload: Payload): Promise<void> {
-  // Em produção sem SMTP configurado, apenas loga e não tenta enviar.
-  if (process.env.NODE_ENV === 'production' && !process.env.SMTP_HOST) {
+  if (shouldSkipSmtp()) {
     console.info('[proposal-notification] SMTP não configurado — pulando envio', {
       reference: payload.reference,
     });
     return;
   }
-
-  const transport = nodemailer.createTransport({
-    host: smtpHost,
-    port: smtpPort,
-    auth: smtpUser && smtpPass ? { user: smtpUser, pass: smtpPass } : undefined,
-    // Mailpit não exige TLS
-    secure: false,
-    ignoreTLS: smtpHost === 'localhost',
-    // Timeouts curtos — não trava o submit em prod sem SMTP
-    connectionTimeout: 5000,
-    greetingTimeout: 5000,
-    socketTimeout: 5000,
-  });
 
   const subject = `[Luma GTC] Nova proposta — ${payload.reference}`;
 
@@ -81,9 +65,9 @@ export async function sendProposalNotification(payload: Payload): Promise<void> 
 </html>
   `.trim();
 
-  await transport.sendMail({
-    from: smtpFrom,
-    to: internalInbox,
+  await smtpTransport().sendMail({
+    from: SMTP_FROM,
+    to: SMTP_INTERNAL_INBOX,
     subject,
     text,
     html,

@@ -62,6 +62,46 @@ export const adminProcedure = t.procedure.use(async ({ ctx, next }) => {
 });
 
 /**
+ * Procedure que exige usuário com role FIELD_OPERATOR (ou ADMIN para override).
+ * Resolve a origem associada via FieldOperator.
+ */
+export const fieldOperatorProcedure = t.procedure.use(async ({ ctx, next }) => {
+  const userId = ctx.session?.user?.id;
+  if (!userId) {
+    throw new TRPCError({ code: 'UNAUTHORIZED' });
+  }
+  const role = ctx.session?.user?.role;
+  if (role !== 'FIELD_OPERATOR' && role !== 'ADMIN') {
+    throw new TRPCError({ code: 'FORBIDDEN', message: 'Field operator only' });
+  }
+  const operator = await ctx.db.fieldOperator.findUnique({
+    where: { userId },
+    include: { origin: true },
+  });
+  if (!operator && role !== 'ADMIN') {
+    throw new TRPCError({
+      code: 'FORBIDDEN',
+      message: 'Operador sem fazenda atribuída.',
+    });
+  }
+  return next({
+    ctx: {
+      ...ctx,
+      session: ctx.session,
+      operator: operator
+        ? {
+            userId,
+            operatorId: operator.id,
+            originId: operator.originId,
+            originSlug: operator.origin.slug,
+          }
+        : null,
+      isAdminOverride: role === 'ADMIN',
+    },
+  });
+});
+
+/**
  * Procedure que exige usuário autenticado com role STAFF ou ADMIN.
  * Usada pelas rotas do Internal Control View.
  */
