@@ -270,4 +270,120 @@ export const buyerRouter = router({
       });
       return { ok: true };
     }),
+
+  /**
+   * Cria um buyer manualmente — pula signup público. Usado pelo staff para
+   * onboardar um buyer já validado offline. A empresa nasce APPROVED, e o
+   * próprio admin é registrado como aprovador.
+   */
+  adminCreate: adminProcedure
+    .input(
+      z.object({
+        email: z.string().email().toLowerCase().trim(),
+        name: z.string().min(2).max(120).trim(),
+        companyLegalName: z.string().min(2).max(180).trim(),
+        companyType: companyTypeSchema,
+        countryIso2: z.string().length(2).toUpperCase(),
+        taxId: z.string().max(40).trim().optional(),
+        contactPhone: z.string().max(40).trim().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const country = await ctx.db.country.findUnique({
+        where: { iso2: input.countryIso2 },
+      });
+      if (!country) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Invalid country' });
+      }
+
+      const existing = await ctx.db.user.findUnique({
+        where: { email: input.email },
+        include: { staff: true, fieldOperator: true, buyer: true },
+      });
+      if (existing?.staff) {
+        throw new TRPCError({
+          code: 'CONFLICT',
+          message: 'E-mail já é membro do time.',
+        });
+      }
+      if (existing?.fieldOperator) {
+        throw new TRPCError({
+          code: 'CONFLICT',
+          message: 'E-mail já é operador de campo.',
+        });
+      }
+      if (existing?.buyer) {
+        throw new TRPCError({
+          code: 'CONFLICT',
+          message: 'E-mail já é comprador.',
+        });
+      }
+
+      const result = await ctx.db.$transaction(async (tx) => {
+        const user =
+          existing ??
+          (await tx.user.create({
+            data: { email: input.email, name: input.name, role: 'BUYER' },
+          }));
+        if (existing && existing.role !== 'BUYER') {
+          await tx.user.update({
+            where: { id: user.id },
+            data: { role: 'BUYER', name: existing.name ?? input.name },
+          });
+        }
+        const company = await tx.buyerCompany.create({
+          data: {
+            legalName: input.companyLegalName,
+            type: input.companyType,
+            countryIso2: input.countryIso2,
+            taxId: input.taxId,
+            contactPhone: input.contactPhone,
+            approvalStatus: 'APPROVED',
+            approvedAt: new Date(),
+            approvedById: ctx.admin.userId,
+            acceptedTermsAt: new Date(),
+          },
+        });
+        await tx.buyer.create({ data: { userId: user.id, companyId: company.id } });
+        return { userId: user.id, companyId: company.id };
+      });
+
+      await ctx.db.auditEvent.create({
+        data: {
+          entity: 'BuyerCompany',
+          entityId: result.companyId,
+          actorId: ctx.admin.userId,
+          toStatus: 'APPROVED_VIA_ADMIN_CREATE',
+          diffJson: { email: input.email, name: input.name },
+        },
+      });
+
+      return result;
+    }),
+
+  /**
+   * Reenvia o magic link de acesso para o buyer (workflow de "esqueci o link"
+   * sem precisar instruir o buyer a passar pelo /auth/sign-in manualmente).
+   */
+  adminResendMagicLink: adminProcedure
+    .input(z.object({ buyerCompanyId: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const company = await ctx.db.buyerCompany.findUnique({
+        where: { id: input.buyerCompanyId },
+        include: { buyers: { include: { user: true } } },
+      });
+      if (!company) throw new TRPCError({ code: 'NOT_FOUND' });
+
+      const { signIn } = await import('@/server/auth/config');
+      const sent: string[] = [];
+      for (const b of company.buyers) {
+        try {
+          await signIn('nodemailer', { email: b.user.email, redirect: false });
+          sent.push(b.user.email);
+        } catch (err) {
+          console.error('[buyer.adminResendMagicLink] falha', b.user.email, err);
+        }
+      }
+      return { ok: true, sent };
+    }),
 });

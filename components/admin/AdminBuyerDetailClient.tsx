@@ -7,6 +7,7 @@ import {
   Building2,
   Check,
   Lock,
+  Mail,
   ShieldOff,
   Unlock,
   X,
@@ -35,6 +36,7 @@ export function AdminBuyerDetailClient({ id }: { id: string }) {
   const rejectM = trpc.buyer.adminReject.useMutation({ onSuccess });
   const blockM = trpc.buyer.adminBlock.useMutation({ onSuccess });
   const unblockM = trpc.buyer.adminUnblock.useMutation({ onSuccess });
+  const resendM = trpc.buyer.adminResendMagicLink.useMutation();
 
   if (dataQ.isLoading) {
     return (
@@ -235,6 +237,22 @@ export function AdminBuyerDetailClient({ id }: { id: string }) {
           >
             <Check className="h-3.5 w-3.5" strokeWidth={1.5} />
             Reverter para aprovado
+          </button>
+        )}
+        {status === 'APPROVED' && (
+          <button
+            type="button"
+            disabled={resendM.isPending}
+            onClick={() => resendM.mutate({ buyerCompanyId: id })}
+            className="inline-flex items-center gap-1.5 rounded-full bg-white/80 px-4 py-2 text-[12px] font-medium text-luma-ink/75 shadow-sm ring-1 ring-inset ring-black/10 hover:text-luma-ink disabled:opacity-50"
+            title="Reenvia o magic link de acesso por e-mail"
+          >
+            <Mail className="h-3.5 w-3.5" strokeWidth={1.5} />
+            {resendM.isPending
+              ? 'Enviando…'
+              : resendM.data?.sent
+                ? 'Enviado ✓'
+                : 'Reenviar magic link'}
           </button>
         )}
       </section>

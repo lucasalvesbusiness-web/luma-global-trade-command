@@ -31,14 +31,22 @@ export function AdminBuyersClient() {
 
   return (
     <main className="space-y-4 p-6">
-      <div>
-        <h2 className="font-display text-xl font-light text-luma-ink">
-          Compradores
-        </h2>
-        <p className="text-[12px] text-luma-ink/60">
-          Cadastros de empresas compradoras. Aprove ou rejeite manualmente para
-          liberar acesso ao canvas.
-        </p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="font-display text-xl font-light text-luma-ink">
+            Compradores
+          </h2>
+          <p className="text-[12px] text-luma-ink/60">
+            Cadastros de empresas compradoras. Aprove ou rejeite manualmente para
+            liberar acesso ao canvas.
+          </p>
+        </div>
+        <a
+          href="/admin/buyers/new"
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-luma-olive px-3 py-1.5 text-[12px] font-medium text-white shadow-sm hover:opacity-90"
+        >
+          + Novo comprador
+        </a>
       </div>
 
       <div className="flex flex-wrap items-center gap-1">
