@@ -94,8 +94,34 @@ export function FieldPlotSubmitClient({
       cur.map((p) => (p.localId === localId ? { ...p, status: 'uploading' } : p)),
     );
     try {
+      // Client-side compression: campo opera em 3G/4G fraco. Reduz para ≤1.5MB
+      // a 2048px no eixo maior. Mantém EXIF orientation. Falhas de compressão
+      // (browsers antigos, formatos incomuns) caem no upload do file original.
+      let toUpload: File | Blob = file;
+      if (file.type.startsWith('image/') && file.size > 800 * 1024) {
+        try {
+          const { default: imageCompression } = await import(
+            'browser-image-compression'
+          );
+          const compressed = await imageCompression(file, {
+            maxSizeMB: 1.5,
+            maxWidthOrHeight: 2048,
+            useWebWorker: true,
+            fileType: file.type === 'image/png' ? 'image/jpeg' : file.type,
+            initialQuality: 0.82,
+          });
+          if (compressed.size < file.size) toUpload = compressed;
+        } catch (err) {
+          console.warn('[field] compression skipped:', err);
+        }
+      }
+
       const fd = new FormData();
-      fd.append('file', file);
+      fd.append(
+        'file',
+        toUpload,
+        toUpload instanceof File ? toUpload.name : file.name,
+      );
       const res = await fetch(`/api/field/upload?plotId=${plotId}`, {
         method: 'POST',
         body: fd,

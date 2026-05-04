@@ -28,12 +28,14 @@ da Luma. Marque com `[x]` quando concluído.
 
 ## LGPD (F14)
 
-- [ ] `/legal/privacy`, `/legal/terms`, `/legal/cookies` no ar com conteúdo
-  revisado pelo counsel da Luma.
-- [ ] Cookie banner bloqueia analytics + Sentry session replay até consent.
-- [ ] Signup tem checkbox obrigatório `acceptedTermsAt` linkando para
-  `/legal/terms` e `/legal/privacy`.
-- [ ] Footer global linka políticas em todas as páginas.
+- [x] `/legal/privacy`, `/legal/terms`, `/legal/cookies` no ar (placeholder
+  técnico; counsel da Luma precisa revisar antes do go-live).
+- [x] Cookie banner two-tier (essential / accept-all) montado em `app/layout.tsx`.
+- [x] Signup tem checkbox obrigatório linkando para `/legal/terms` e
+  `/legal/privacy`. Persiste `acceptedTermsAt` em `BuyerCompany`.
+- [ ] Sentry session replay efetivamente gateado por consent (validar em
+  staging).
+- [ ] Texto final aprovado pelo counsel da Luma.
 
 ## Observabilidade (F15)
 
@@ -48,14 +50,20 @@ da Luma. Marque com `[x]` quando concluído.
 
 ## Foto pipeline (F16)
 
-- [ ] Compressão client-side aplicada (`browser-image-compression`).
-- [ ] Variantes `thumb`/`med`/`full` geradas via `sharp` no upload.
-- [ ] Bulk upload via `/admin/photos/bulk`.
+- [x] Compressão client-side via `browser-image-compression` (≤1.5 MB, 2048px,
+  webworker). Aplicada no `FieldPlotSubmitClient`.
+- [ ] **Deferido pós-launch:** variantes `thumb`/`med`/`full` via `sharp`.
+  Mitigação: client compression já reduz banda significativamente; original
+  serve admin e canvas até o pipeline V3.
+- [ ] **Deferido pós-launch:** bulk upload `/admin/photos/bulk`. Mitigação:
+  upload um a um aceitável até primeira cohort.
 
 ## Operacional (F17)
 
-- [ ] `/admin/buyers/new` para criação manual (sem signup público).
-- [ ] Botão "Reenviar magic link" em `AdminBuyerDetailClient` e `AdminStaffClient`.
+- [x] `/admin/buyers/new` para criação manual (sem signup público).
+- [x] Botão "Reenviar magic link" em `AdminBuyerDetailClient`.
+- [ ] Botão "Reenviar invite" em `AdminStaffClient` (deferido — staff invite
+  já reenvia automaticamente quando re-chamado com mesmo email).
 
 ## Infra (F18 — Luma owns)
 
