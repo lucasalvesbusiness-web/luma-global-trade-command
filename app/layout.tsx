@@ -4,6 +4,7 @@ import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
 
 import { TrpcProvider } from '@/lib/trpc/react';
+import { CookieBanner } from '@/components/legal/CookieBanner';
 import './globals.css';
 
 const sans = Inter({
@@ -42,6 +43,7 @@ export default async function RootLayout({
       <body>
         <NextIntlClientProvider locale={locale} messages={messages}>
           <TrpcProvider>{children}</TrpcProvider>
+          <CookieBanner />
         </NextIntlClientProvider>
       </body>
     </html>

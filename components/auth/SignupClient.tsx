@@ -25,10 +25,12 @@ const labelCls =
 
 export function SignupClient({ countries }: { countries: Country[] }) {
   const [submitting, setSubmitting] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [result, setResult] = useState<SignupActionResult | null>(null);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (!acceptedTerms) return;
     setSubmitting(true);
     const fd = new FormData(e.currentTarget);
     const r = await submitSignup(fd);
@@ -195,6 +197,27 @@ export function SignupClient({ countries }: { countries: Country[] }) {
             </div>
           )}
 
+          <label className="md:col-span-2 mt-1 flex items-start gap-2 text-[12.5px] leading-relaxed text-luma-ink/75">
+            <input
+              type="checkbox"
+              required
+              checked={acceptedTerms}
+              onChange={(e) => setAcceptedTerms(e.target.checked)}
+              className="mt-0.5 h-4 w-4 shrink-0 rounded border-black/20 text-luma-olive focus:ring-luma-olive"
+            />
+            <span>
+              Li e aceito os{' '}
+              <Link href="/legal/terms" target="_blank" className="underline">
+                Termos de Uso
+              </Link>{' '}
+              e a{' '}
+              <Link href="/legal/privacy" target="_blank" className="underline">
+                Política de Privacidade
+              </Link>
+              . / I have read and accept the Terms of Use and the Privacy Policy.
+            </span>
+          </label>
+
           <div className="md:col-span-2 mt-2 flex items-center justify-between gap-3">
             <Link
               href="/auth/sign-in"
@@ -204,7 +227,7 @@ export function SignupClient({ countries }: { countries: Country[] }) {
             </Link>
             <button
               type="submit"
-              disabled={submitting}
+              disabled={submitting || !acceptedTerms}
               className="inline-flex items-center gap-1.5 rounded-full bg-luma-olive px-4 py-2 text-[12.5px] font-medium text-white shadow-sm transition hover:opacity-90 disabled:opacity-50"
             >
               <Send className="h-3.5 w-3.5" strokeWidth={1.5} />

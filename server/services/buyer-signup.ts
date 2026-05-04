@@ -78,6 +78,7 @@ export async function signupBuyer(
         taxId: input.taxId,
         contactPhone: input.contactPhone,
         approvalStatus: 'PENDING',
+        acceptedTermsAt: new Date(),
       },
     });
 
