@@ -592,6 +592,13 @@ const _unused: SeedCountry | undefined = undefined;
 // -------------------------------------------------------------
 
 async function main(): Promise<void> {
+  if (process.env.NODE_ENV === 'production' && process.env.SEED_ALLOWED !== '1') {
+    throw new Error(
+      'Refusing to seed in production without SEED_ALLOWED=1. The seed is ' +
+        'idempotent but it overwrites narrative fixtures (products, fazendas, ' +
+        'compliance text) and may collide with curated Luma data.',
+    );
+  }
   console.log(`🌱  Luma seed — start at ${now().toISOString()}`);
   await seedGeo();
   await seedCatalog();

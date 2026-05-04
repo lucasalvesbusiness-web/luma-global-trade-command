@@ -1,20 +1,55 @@
 import Link from 'next/link';
-import { Camera, Package, ShoppingCart, Sprout, Warehouse } from 'lucide-react';
+import {
+  AlertTriangle,
+  Building2,
+  Camera,
+  Package,
+  ShoppingCart,
+  Sprout,
+  Warehouse,
+} from 'lucide-react';
 
 import { repositories } from '@/server/repositories';
 import { db } from '@/lib/db';
+import { computeRoutineStatus } from '@/lib/routines/status';
 
 export const metadata = { title: 'Dashboard · Admin' };
 
 export default async function AdminDashboardPage() {
-  const [products, origins, availabilities, proposals, pendingPhotos] =
-    await Promise.all([
-      db.product.count(),
-      db.origin.count(),
-      db.availability.count(),
-      db.proposal.count(),
-      db.fieldPhoto.count({ where: { approvedForBuyerView: false } }),
-    ]);
+  const [
+    products,
+    origins,
+    availabilities,
+    proposals,
+    pendingPhotos,
+    pendingBuyers,
+    plotsForRoutines,
+  ] = await Promise.all([
+    db.product.count(),
+    db.origin.count(),
+    db.availability.count(),
+    db.proposal.count(),
+    db.fieldPhoto.count({ where: { approvedForBuyerView: false } }),
+    db.buyerCompany.count({ where: { approvalStatus: 'PENDING' } }),
+    db.fieldPlot.findMany({
+      include: {
+        routine: true,
+        submissions: { orderBy: { submittedAt: 'desc' }, take: 1 },
+      },
+    }),
+  ]);
+
+  const now = new Date();
+  let overdueRoutines = 0;
+  for (const p of plotsForRoutines) {
+    const last = p.submissions[0]?.submittedAt ?? null;
+    const snap = computeRoutineStatus(
+      p.routine ? { cadenceDays: p.routine.cadenceDays, active: p.routine.active } : null,
+      last,
+      now,
+    );
+    if (snap.status === 'OVERDUE') overdueRoutines++;
+  }
 
   const proposalStatusCounts = await db.proposal.groupBy({
     by: ['status'],
@@ -30,7 +65,7 @@ export default async function AdminDashboardPage() {
         <h2 className="text-[0.62rem] uppercase tracking-[0.32em] text-luma-olive/80">
           Visão geral
         </h2>
-        <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-5">
+        <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-7">
           <Counter
             icon={<Package className="h-3.5 w-3.5" />}
             label="Produtos"
@@ -41,6 +76,7 @@ export default async function AdminDashboardPage() {
             icon={<Sprout className="h-3.5 w-3.5" />}
             label="Origens"
             value={origins}
+            href="/admin/origins"
           />
           <Counter
             icon={<Warehouse className="h-3.5 w-3.5" />}
@@ -58,6 +94,22 @@ export default async function AdminDashboardPage() {
             icon={<Camera className="h-3.5 w-3.5" />}
             label="Fotos pendentes"
             value={pendingPhotos}
+            href="/admin/photos"
+            tone={pendingPhotos > 0 ? 'warn' : undefined}
+          />
+          <Counter
+            icon={<Building2 className="h-3.5 w-3.5" />}
+            label="Aguardando aprovação"
+            value={pendingBuyers}
+            href="/admin/buyers"
+            tone={pendingBuyers > 0 ? 'warn' : undefined}
+          />
+          <Counter
+            icon={<AlertTriangle className="h-3.5 w-3.5" />}
+            label="Rotinas atrasadas"
+            value={overdueRoutines}
+            href="/admin/origins"
+            tone={overdueRoutines > 0 ? 'alarm' : undefined}
           />
         </div>
       </section>
@@ -131,14 +183,22 @@ function Counter({
   label,
   value,
   href,
+  tone,
 }: {
   icon: React.ReactNode;
   label: string;
   value: number;
   href?: string;
+  tone?: 'warn' | 'alarm';
 }) {
+  const ring =
+    tone === 'alarm'
+      ? 'ring-rose-500/30 bg-rose-50/70'
+      : tone === 'warn'
+        ? 'ring-amber-500/30 bg-amber-50/70'
+        : 'ring-black/5 bg-white/70';
   const card = (
-    <div className="rounded-xl bg-white/70 p-4 ring-1 ring-inset ring-black/5 transition hover:bg-white">
+    <div className={`rounded-xl p-4 ring-1 ring-inset transition hover:brightness-105 ${ring}`}>
       <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.22em] text-luma-olive/80">
         {icon}
         {label}

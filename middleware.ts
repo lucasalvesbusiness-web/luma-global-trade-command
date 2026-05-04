@@ -49,7 +49,8 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Tudo exceto assets estáticos e internals Next.
-    '/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml).*)',
+    // Tudo exceto assets estáticos, internals Next, e endpoints que precisam
+    // ser publicamente alcançáveis (health, cron). Esses já têm gate próprio.
+    '/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|api/health|api/cron).*)',
   ],
 };
