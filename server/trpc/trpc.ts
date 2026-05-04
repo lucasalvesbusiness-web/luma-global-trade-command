@@ -1,4 +1,5 @@
 import { initTRPC, TRPCError } from '@trpc/server';
+import * as Sentry from '@sentry/nextjs';
 import superjson from 'superjson';
 import { ZodError } from 'zod';
 
@@ -21,6 +22,16 @@ export async function createContext(): Promise<TrpcContext> {
 const t = initTRPC.context<TrpcContext>().create({
   transformer: superjson,
   errorFormatter({ shape, error }) {
+    // 4xx errors (UNAUTHORIZED/FORBIDDEN/NOT_FOUND/BAD_REQUEST/CONFLICT) are
+    // expected — don't pollute Sentry. Log only INTERNAL_SERVER_ERROR and
+    // unknown causes.
+    if (
+      !error.code ||
+      error.code === 'INTERNAL_SERVER_ERROR' ||
+      error.code === 'PARSE_ERROR'
+    ) {
+      Sentry.captureException(error);
+    }
     return {
       ...shape,
       data: {

@@ -1,10 +1,12 @@
 'use server';
 
+import { headers } from 'next/headers';
 import { z } from 'zod';
 
 import { signIn } from '@/server/auth/config';
 import { signupBuyer } from '@/server/services/buyer-signup';
 import { notifyBuyerSignup } from '@/server/mail/buyer-signup-notification';
+import { signupLimiter } from '@/lib/security/rate-limit';
 
 const inputSchema = z.object({
   email: z.string().email().toLowerCase().trim(),
@@ -30,6 +32,19 @@ export type SignupActionResult =
 export async function submitSignup(
   formData: FormData,
 ): Promise<SignupActionResult> {
+  const h = await headers();
+  const ip =
+    h.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    h.get('x-real-ip') ||
+    'unknown';
+  const rl = await signupLimiter.limit(ip);
+  if (!rl.success) {
+    return {
+      ok: false,
+      error: 'Muitas tentativas. Tente novamente em alguns minutos.',
+    };
+  }
+
   const parsed = inputSchema.safeParse({
     email: formData.get('email'),
     name: formData.get('name'),

@@ -1,5 +1,7 @@
+import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { auth, signIn } from '@/server/auth/config';
+import { magicLinkLimiter } from '@/lib/security/rate-limit';
 
 export const metadata = { title: 'Entrar' };
 
@@ -24,6 +26,15 @@ export default async function SignInPage({
     'use server';
     const email = String(formData.get('email') ?? '').trim().toLowerCase();
     if (!email) return;
+    const h = await headers();
+    const ip =
+      h.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+      h.get('x-real-ip') ||
+      'unknown';
+    const rl = await magicLinkLimiter.limit(`${ip}:${email}`);
+    if (!rl.success) {
+      redirect('/auth/sign-in?error=RateLimited');
+    }
     await signIn('nodemailer', {
       email,
       redirectTo: next,
@@ -81,7 +92,9 @@ export default async function SignInPage({
           <p className="mt-4 rounded-md bg-[hsl(var(--luma-earth)_/_0.1)] px-3 py-2 text-[12.5px] text-[hsl(var(--luma-earth))] ring-1 ring-inset ring-[hsl(var(--luma-earth)_/_0.3)]">
             {params.error === 'AccessDenied'
               ? 'Seu e-mail não tem acesso interno.'
-              : 'Falha no envio. Tente novamente.'}
+              : params.error === 'RateLimited'
+                ? 'Muitas tentativas. Aguarde alguns minutos antes de tentar novamente.'
+                : 'Falha no envio. Tente novamente.'}
           </p>
         )}
 
