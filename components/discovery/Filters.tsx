@@ -51,8 +51,8 @@ export function Filters() {
                   className={
                     'rounded-full border px-2.5 py-1 text-xs transition-colors ' +
                     (active
-                      ? 'border-luma-ink bg-luma-ink text-luma-offwhite'
-                      : 'border-luma-ink/15 text-luma-ink/70 hover:border-luma-ink/30')
+                      ? 'border-white/15 bg-ink-900 text-ink-50'
+                      : 'border-white/15 text-ink-200 hover:border-white/30')
                   }
                 >
                   {cat}
@@ -76,8 +76,8 @@ export function Filters() {
                   className={
                     'flex-1 rounded-md border px-2 py-1.5 text-xs transition-colors ' +
                     (active
-                      ? 'border-luma-ink bg-luma-ink text-luma-offwhite'
-                      : 'border-luma-ink/15 text-luma-ink/70 hover:border-luma-ink/30')
+                      ? 'border-white/15 bg-ink-900 text-ink-50'
+                      : 'border-white/15 text-ink-200 hover:border-white/30')
                   }
                 >
                   {labels[m]}
@@ -90,7 +90,7 @@ export function Filters() {
         <div className="flex flex-col gap-1.5">
           <Label>Verificação mínima</Label>
           <select
-            className="h-10 rounded-md border border-luma-ink/15 bg-luma-offwhite px-3 text-sm"
+            className="h-10 rounded-md border border-white/15 bg-ink-900 px-3 text-sm"
             value={filters.minVerification}
             onChange={(e) =>
               setFilter('minVerification', e.target.value as typeof filters.minVerification)

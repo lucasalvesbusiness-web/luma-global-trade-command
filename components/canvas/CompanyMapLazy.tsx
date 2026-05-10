@@ -7,7 +7,7 @@ export const CompanyMapLazy = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="flex h-72 w-full items-center justify-center rounded-lg bg-luma-sand/30 text-sm text-luma-ink/50">
+      <div className="flex h-72 w-full items-center justify-center rounded-lg bg-ink-850 text-sm text-ink-400">
         carregando mapa…
       </div>
     ),

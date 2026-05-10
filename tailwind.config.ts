@@ -1,7 +1,15 @@
 import type { Config } from 'tailwindcss';
 
+// Spectre brand palette — monochrome industrial steel.
+//   --dust-grey:    #D0D0D0   primary text, accent at full intensity
+//   --cool-steel:   #A0A0A0   secondary text, secondary glyphs
+//   --gunmetal:     #404040   strong borders, muted UI
+//   --shadow-grey:  #282828   elevated surface (cards, panels)
+//   --carbon-black: #1C1C1C   page base
+//   amber:         #C9A968   warm accent (CTAs only, used sparingly)
+
 const config: Config = {
-  darkMode: ['class'],
+  darkMode: 'class',
   content: [
     './app/**/*.{ts,tsx}',
     './components/**/*.{ts,tsx}',
@@ -12,72 +20,103 @@ const config: Config = {
     container: {
       center: true,
       padding: '1.5rem',
-      screens: { '2xl': '1400px' },
+      screens: { '2xl': '1320px' },
     },
     extend: {
       colors: {
-        luma: {
-          offwhite: 'hsl(var(--luma-offwhite) / <alpha-value>)',
-          sand: 'hsl(var(--luma-sand) / <alpha-value>)',
-          olive: 'hsl(var(--luma-olive) / <alpha-value>)',
-          field: 'hsl(var(--luma-field) / <alpha-value>)',
-          river: 'hsl(var(--luma-river) / <alpha-value>)',
-          earth: 'hsl(var(--luma-earth) / <alpha-value>)',
-          sun: 'hsl(var(--luma-sun) / <alpha-value>)',
-          ink: 'hsl(var(--luma-ink) / <alpha-value>)',
+        spectre: {
+          dust: '#D0D0D0',
+          steel: '#A0A0A0',
+          gunmetal: '#404040',
+          shadow: '#282828',
+          carbon: '#1C1C1C',
+          amber: '#C9A968',
+          'amber-glow': '#E5C893',
+          'amber-deep': '#8A7344',
         },
-        background: 'hsl(var(--background) / <alpha-value>)',
-        foreground: 'hsl(var(--foreground) / <alpha-value>)',
-        muted: {
-          DEFAULT: 'hsl(var(--muted) / <alpha-value>)',
-          foreground: 'hsl(var(--muted-foreground) / <alpha-value>)',
+        ink: {
+          950: '#0F0F0F',
+          900: '#1C1C1C',
+          850: '#232323',
+          800: '#282828',
+          750: '#2E2E2E',
+          700: '#353535',
+          600: '#404040',
+          500: '#5A5A5A',
+          400: '#7A7A7A',
+          300: '#A0A0A0',
+          200: '#BDBDBD',
+          100: '#D0D0D0',
+          50: '#ECECEC',
         },
-        border: 'hsl(var(--border) / <alpha-value>)',
-        input: 'hsl(var(--input) / <alpha-value>)',
-        ring: 'hsl(var(--ring) / <alpha-value>)',
-        primary: {
-          DEFAULT: 'hsl(var(--primary) / <alpha-value>)',
-          foreground: 'hsl(var(--primary-foreground) / <alpha-value>)',
+        bone: {
+          50: '#F5F5F5',
+          100: '#EDEDED',
+          200: '#E0E0E0',
+          300: '#C8C8C8',
+          400: '#9C9C9C',
+          500: '#707070',
+          600: '#4D4D4D',
+          700: '#2E2E2E',
+          800: '#1F1F1F',
+          900: '#121212',
         },
-        secondary: {
-          DEFAULT: 'hsl(var(--secondary) / <alpha-value>)',
-          foreground: 'hsl(var(--secondary-foreground) / <alpha-value>)',
+        amber: {
+          DEFAULT: '#C9A968',
+          dim: '#8A7344',
+          glow: '#E5C893',
+          deep: '#5C4D2C',
         },
-        accent: {
-          DEFAULT: 'hsl(var(--accent) / <alpha-value>)',
-          foreground: 'hsl(var(--accent-foreground) / <alpha-value>)',
-        },
-        destructive: {
-          DEFAULT: 'hsl(var(--destructive) / <alpha-value>)',
-          foreground: 'hsl(var(--destructive-foreground) / <alpha-value>)',
-        },
-        card: {
-          DEFAULT: 'hsl(var(--card) / <alpha-value>)',
-          foreground: 'hsl(var(--card-foreground) / <alpha-value>)',
-        },
+        // Semantic tokens (mapped to Spectre ramps)
+        background: '#1C1C1C',
+        foreground: '#D0D0D0',
+        muted: { DEFAULT: '#282828', foreground: '#A0A0A0' },
+        border: '#404040',
+        input: '#282828',
+        ring: '#C9A968',
+        primary: { DEFAULT: '#D0D0D0', foreground: '#1C1C1C' },
+        secondary: { DEFAULT: '#282828', foreground: '#D0D0D0' },
+        accent: { DEFAULT: '#C9A968', foreground: '#1C1C1C' },
+        destructive: { DEFAULT: '#B85450', foreground: '#ECECEC' },
+        card: { DEFAULT: '#232323', foreground: '#D0D0D0' },
       },
       fontFamily: {
-        sans: ['var(--font-sans)', 'system-ui', 'sans-serif'],
-        display: ['var(--font-display)', 'Georgia', 'serif'],
+        display: ['var(--font-display)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        sans: ['var(--font-sans)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        mono: ['var(--font-mono)', 'ui-monospace', 'SFMono-Regular', 'monospace'],
       },
-      backdropBlur: {
-        luma: '14px',
+      letterSpacing: {
+        tightest: '-0.04em',
+        wider2: '0.18em',
+      },
+      maxWidth: { layout: '1320px' },
+      transitionTimingFunction: {
+        cinematic: 'cubic-bezier(0.22, 1, 0.36, 1)',
       },
       borderRadius: {
-        lg: 'var(--radius)',
-        md: 'calc(var(--radius) - 2px)',
-        sm: 'calc(var(--radius) - 4px)',
-      },
-      transitionTimingFunction: {
-        luma: 'cubic-bezier(0.22, 1, 0.36, 1)',
+        sm: '0.25rem',
+        md: '0.375rem',
+        lg: '0.5rem',
       },
       animation: {
-        'luma-breathe': 'luma-breathe 6s ease-in-out infinite',
+        'amber-pulse': 'amberPulse 3.2s ease-in-out infinite',
+        flow: 'flow 9s linear infinite',
+        'hud-in': 'hudIn 600ms cubic-bezier(0.22, 1, 0.36, 1) forwards',
       },
       keyframes: {
-        'luma-breathe': {
+        amberPulse: {
           '0%, 100%': { opacity: '0.55' },
-          '50%': { opacity: '0.9' },
+          '50%': { opacity: '1' },
+        },
+        flow: {
+          '0%': { left: '-2%', opacity: '0' },
+          '8%': { opacity: '1' },
+          '92%': { opacity: '1' },
+          '100%': { left: '100%', opacity: '0' },
+        },
+        hudIn: {
+          from: { opacity: '0', transform: 'translateY(8px)' },
+          to: { opacity: '1', transform: 'translateY(0)' },
         },
       },
     },

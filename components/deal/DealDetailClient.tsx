@@ -88,20 +88,20 @@ export function DealDetailClient({
 
   return (
     <main className="mx-auto max-w-4xl px-6 py-12">
-      <Link href="/deals" className="text-xs text-luma-ink/60 hover:underline">
+      <Link href="/d" className="text-xs text-ink-300 hover:underline">
         ← Voltar aos deal rooms
       </Link>
 
       <header className="mt-3 mb-6 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-xs uppercase tracking-wider text-luma-ink/50">
+          <p className="text-xs uppercase tracking-wider text-ink-400">
             {viewerRole === 'BUYER' ? 'Comprador' : 'Fornecedor'} ·{' '}
             {dealTemplateLabels[deal.template]?.['pt-br']}
           </p>
           <h1 className="mt-1 font-display text-3xl tracking-tight">{deal.title}</h1>
-          <p className="mt-1 text-sm text-luma-ink/60">
+          <p className="mt-1 text-sm text-ink-300">
             {viewerRole === 'BUYER' ? 'Fornecedor: ' : 'Comprador: '}
-            <Link className="underline" href={`/company/${counterparty.slug}`}>
+            <Link className="underline" href={`/c/${counterparty.slug}`}>
               {counterparty.tradeName ?? counterparty.legalName}
             </Link>
           </p>
@@ -116,7 +116,7 @@ export function DealDetailClient({
               <CardTitle>Escopo</CardTitle>
             </CardHeader>
             <CardContent>
-              <pre className="whitespace-pre-wrap rounded-md bg-luma-sand/30 p-4 text-xs text-luma-ink/80">
+              <pre className="whitespace-pre-wrap rounded-md bg-ink-850 p-4 text-xs text-ink-100">
                 {deal.scopePayload ? JSON.stringify(deal.scopePayload, null, 2) : '— sem escopo —'}
               </pre>
             </CardContent>
@@ -132,12 +132,12 @@ export function DealDetailClient({
                   {deal.cycles.map((cy) => (
                     <li
                       key={cy.id}
-                      className="flex items-center justify-between rounded-md border border-luma-ink/10 px-3 py-2"
+                      className="flex items-center justify-between rounded-md border border-white/10 px-3 py-2"
                     >
                       <span>
                         Ciclo #{cy.ordinal}
                         {cy.scheduledAt && (
-                          <span className="ml-2 text-xs text-luma-ink/50">
+                          <span className="ml-2 text-xs text-ink-400">
                             previsto {new Date(cy.scheduledAt).toLocaleDateString('pt-BR')}
                           </span>
                         )}
@@ -166,12 +166,12 @@ export function DealDetailClient({
             </CardHeader>
             <CardContent className="flex flex-col gap-3">
               {deal.evidences.length === 0 && (
-                <p className="text-sm text-luma-ink/50">Sem evidências ainda.</p>
+                <p className="text-sm text-ink-400">Sem evidências ainda.</p>
               )}
               {deal.evidences.map((ev) => (
                 <div
                   key={ev.id}
-                  className="flex items-start justify-between gap-3 rounded-md border border-luma-ink/10 px-3 py-2 text-sm"
+                  className="flex items-start justify-between gap-3 rounded-md border border-white/10 px-3 py-2 text-sm"
                 >
                   <div className="min-w-0 flex-1">
                     <a
@@ -183,7 +183,7 @@ export function DealDetailClient({
                       {ev.kind} · {ev.url}
                     </a>
                     {ev.caption && (
-                      <p className="mt-1 text-xs text-luma-ink/60">{ev.caption}</p>
+                      <p className="mt-1 text-xs text-ink-300">{ev.caption}</p>
                     )}
                   </div>
                   {ev.acceptedAt ? (
@@ -201,8 +201,8 @@ export function DealDetailClient({
                 </div>
               ))}
 
-              <div className="rounded-md border border-dashed border-luma-ink/15 p-3">
-                <p className="mb-2 text-xs text-luma-ink/60">
+              <div className="rounded-md border border-dashed border-white/15 p-3">
+                <p className="mb-2 text-xs text-ink-300">
                   Cole uma URL pública (no MVP). Em F3.5 ligamos upload via Vercel Blob.
                 </p>
                 <div className="flex flex-col gap-2">
@@ -230,23 +230,23 @@ export function DealDetailClient({
             </CardHeader>
             <CardContent>
               {events.length === 0 ? (
-                <p className="text-sm text-luma-ink/50">Sem eventos.</p>
+                <p className="text-sm text-ink-400">Sem eventos.</p>
               ) : (
                 <ol className="flex flex-col gap-2 text-sm">
                   {events.map((e) => (
                     <li key={e.id} className="flex items-start gap-3">
-                      <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-luma-olive" />
+                      <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-amber" />
                       <div className="flex-1">
                         <p className="font-medium">
                           {e.action}
                           {e.fromStatus && e.toStatus && (
-                            <span className="ml-2 text-xs text-luma-ink/50">
+                            <span className="ml-2 text-xs text-ink-400">
                               {STATUS_LABELS_PT[e.fromStatus as DealRoomStatus] ?? e.fromStatus} →{' '}
                               {STATUS_LABELS_PT[e.toStatus as DealRoomStatus] ?? e.toStatus}
                             </span>
                           )}
                         </p>
-                        <p className="text-xs text-luma-ink/50">
+                        <p className="text-xs text-ink-400">
                           {new Date(e.createdAt).toLocaleString('pt-BR')}
                         </p>
                       </div>
@@ -265,11 +265,11 @@ export function DealDetailClient({
             </CardHeader>
             <CardContent className="flex flex-col gap-3">
               {nextStates.length === 0 && (
-                <p className="text-sm text-luma-ink/50">Nenhuma ação para você neste estado.</p>
+                <p className="text-sm text-ink-400">Nenhuma ação para você neste estado.</p>
               )}
 
               {nextStates.includes('QUOTED') && viewerRole === 'SUPPLIER' && (
-                <div className="flex flex-col gap-2 rounded-md border border-luma-ink/10 p-3">
+                <div className="flex flex-col gap-2 rounded-md border border-white/10 p-3">
                   <Label>Cotação (R$)</Label>
                   <Input
                     type="number"
@@ -298,7 +298,7 @@ export function DealDetailClient({
                 .map((to) => (
                   <Button
                     key={to}
-                    variant={to === 'CANCELLED' || to === 'DISPUTED' ? 'outline' : 'default'}
+                    variant={to === 'CANCELLED' || to === 'DISPUTED' ? 'outline' : 'primary'}
                     size="sm"
                     onClick={() => fireTransition(to)}
                     disabled={transition.isPending}

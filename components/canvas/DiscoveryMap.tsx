@@ -25,14 +25,14 @@ export function DiscoveryMap({ companies, className }: Props) {
     if (!containerRef.current) return;
     if (!TOKEN) {
       containerRef.current.innerHTML =
-        '<div class="flex h-full w-full items-center justify-center text-xs text-luma-ink/50">Defina NEXT_PUBLIC_MAPBOX_TOKEN para ver o mapa.</div>';
+        '<div class="flex h-full w-full items-center justify-center text-xs text-ink-400">Defina NEXT_PUBLIC_MAPBOX_TOKEN para ver o mapa.</div>';
       return;
     }
 
     mapboxgl.accessToken = TOKEN;
     const map = new mapboxgl.Map({
       container: containerRef.current,
-      style: 'mapbox://styles/mapbox/outdoors-v12',
+      style: 'mapbox://styles/mapbox/dark-v11',
       center: [-46.633, -23.55],
       zoom: 4,
       attributionControl: false,
@@ -67,7 +67,8 @@ export function DiscoveryMap({ companies, className }: Props) {
       const el = document.createElement('button');
       el.type = 'button';
       el.className =
-        'h-3.5 w-3.5 rounded-full border-2 border-white bg-luma-olive shadow-md transition-transform hover:scale-125 cursor-pointer';
+        'h-3 w-3 rounded-full border border-white/40 transition-transform hover:scale-150 cursor-pointer';
+      el.style.background = '#D0D0D0';
       el.dataset.companyId = c.id;
       el.addEventListener('mouseenter', () => setHover(c.id));
       el.addEventListener('mouseleave', () => setHover(null));
@@ -94,14 +95,14 @@ export function DiscoveryMap({ companies, className }: Props) {
       const el = marker.getElement();
       const isActive = id === hoveredId || id === selectedId;
       el.style.transform = isActive ? 'scale(1.4)' : '';
-      el.style.background = id === selectedId ? 'hsl(var(--luma-sun))' : '';
+      el.style.background = id === selectedId ? '#E5C893' : '#D0D0D0';
     }
   }, [hoveredId, selectedId]);
 
   return (
     <div
       ref={containerRef}
-      className={className ?? 'h-full w-full overflow-hidden rounded-lg bg-luma-sand/30'}
+      className={className ?? 'h-full w-full overflow-hidden rounded-md bg-ink-900'}
     />
   );
 }

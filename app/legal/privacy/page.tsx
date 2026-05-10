@@ -3,7 +3,7 @@ export const metadata = { title: 'Privacy Policy · Luma Global Trade Command' }
 export default function PrivacyPage() {
   return (
     <>
-      <p className="text-[11px] uppercase tracking-[0.3em] text-luma-olive/80">
+      <p className="text-[11px] uppercase tracking-[0.3em] text-amber/80">
         Placeholder — pendente de revisão jurídica Luma
       </p>
       <h1>Política de Privacidade / Privacy Policy</h1>

@@ -55,6 +55,17 @@ const nextConfig = {
   async headers() {
     return [{ source: '/:path*', headers: securityHeaders }];
   },
+  async redirects() {
+    return [
+      { source: '/company/:slug', destination: '/c/:slug', permanent: true },
+      { source: '/company/edit', destination: '/c/edit', permanent: true },
+      { source: '/deals', destination: '/d', permanent: true },
+      { source: '/deals/:id', destination: '/d/:id', permanent: true },
+      { source: '/discover', destination: '/explore', permanent: true },
+      { source: '/onboarding', destination: '/start', permanent: true },
+      { source: '/reviews/pending', destination: '/inbox', permanent: true },
+    ];
+  },
 };
 
 const withIntl = withNextIntl(nextConfig);

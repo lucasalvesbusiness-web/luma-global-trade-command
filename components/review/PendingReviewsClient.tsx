@@ -21,16 +21,16 @@ export function PendingReviewsClient({ items }: { items: Item[] }) {
   return (
     <main className="mx-auto max-w-3xl px-6 py-12">
       <header className="mb-6">
-        <p className="text-xs uppercase tracking-wider text-luma-ink/50">Avaliações pendentes</p>
+        <p className="text-xs uppercase tracking-wider text-ink-400">Avaliações pendentes</p>
         <h1 className="font-display text-2xl">Avalie as contrapartes</h1>
-        <p className="mt-2 text-sm text-luma-ink/60">
+        <p className="mt-2 text-sm text-ink-300">
           Avaliações vinculadas a negócios concluídos compõem reputação contextual. Sem deal
           confirmado, não há review.
         </p>
       </header>
 
       {items.length === 0 ? (
-        <p className="rounded-lg border border-dashed border-luma-ink/15 p-8 text-center text-sm text-luma-ink/60">
+        <p className="rounded-lg border border-dashed border-white/15 p-8 text-center text-sm text-ink-300">
           Sem avaliações pendentes.
         </p>
       ) : (
@@ -77,7 +77,7 @@ function ReviewForm({ item }: { item: Item }) {
   if (done) {
     return (
       <Card>
-        <CardContent className="py-6 text-center text-sm text-luma-ink/60">
+        <CardContent className="py-6 text-center text-sm text-ink-300">
           Obrigado. Sua avaliação foi registrada.
         </CardContent>
       </Card>
@@ -88,9 +88,9 @@ function ReviewForm({ item }: { item: Item }) {
     <Card>
       <CardHeader>
         <CardTitle>{item.ratedCompany.tradeName ?? item.ratedCompany.legalName}</CardTitle>
-        <p className="text-xs text-luma-ink/60">
+        <p className="text-xs text-ink-300">
           Deal:{' '}
-          <Link className="underline" href={`/deals/${item.dealId}`}>
+          <Link className="underline" href={`/d/${item.dealId}`}>
             {item.dealTitle}
           </Link>
         </p>
@@ -108,8 +108,8 @@ function ReviewForm({ item }: { item: Item }) {
                   className={
                     'h-9 w-9 rounded-md border text-sm transition-colors ' +
                     (rating !== null && n <= rating
-                      ? 'border-luma-ink bg-luma-ink text-luma-offwhite'
-                      : 'border-luma-ink/15 text-luma-ink/50 hover:border-luma-ink/30')
+                      ? 'border-white/15 bg-ink-900 text-ink-50'
+                      : 'border-white/15 text-ink-400 hover:border-white/30')
                   }
                 >
                   {n}

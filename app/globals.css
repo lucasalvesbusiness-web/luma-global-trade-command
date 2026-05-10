@@ -2,44 +2,335 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  :root {
-    /* Luma natural palette (kept as placeholder until rebrand). */
-    --luma-offwhite: 38 32% 96%;
-    --luma-sand: 38 22% 88%;
-    --luma-olive: 78 18% 36%;
-    --luma-field: 96 20% 42%;
-    --luma-river: 198 32% 44%;
-    --luma-earth: 24 30% 38%;
-    --luma-sun: 38 76% 58%;
-    --luma-ink: 220 18% 14%;
+:root {
+  color-scheme: dark;
 
-    /* Semantic tokens (mapped to neutral palette). */
-    --background: var(--luma-offwhite);
-    --foreground: var(--luma-ink);
-    --muted: var(--luma-sand);
-    --muted-foreground: 220 8% 36%;
-    --border: 220 12% 88%;
-    --input: 220 12% 88%;
-    --ring: var(--luma-ink);
-    --primary: var(--luma-ink);
-    --primary-foreground: var(--luma-offwhite);
-    --secondary: var(--luma-sand);
-    --secondary-foreground: var(--luma-ink);
-    --accent: var(--luma-olive);
-    --accent-foreground: var(--luma-offwhite);
-    --destructive: 0 70% 48%;
-    --destructive-foreground: 0 0% 98%;
-    --card: var(--luma-offwhite);
-    --card-foreground: var(--luma-ink);
-    --radius: 0.5rem;
-  }
+  /* Spectre brand palette — monochrome industrial steel */
+  --dust-grey: #d0d0d0;
+  --cool-steel: #a0a0a0;
+  --gunmetal: #404040;
+  --shadow-grey: #282828;
+  --carbon-black: #1c1c1c;
 
-  body {
-    @apply bg-background text-foreground antialiased;
-    font-feature-settings: 'rlig' 1, 'calt' 1;
+  /* Warm accent — used sparingly on CTAs */
+  --amber: #c9a968;
+  --amber-glow: #e5c893;
+  --amber-deep: #8a7344;
+
+  /* Grids */
+  --grid-color: rgba(255, 255, 255, 0.04);
+  --grid-color-strong: rgba(255, 255, 255, 0.08);
+
+  --hud-accent: #c9a968;
+}
+
+html,
+body {
+  background: #1c1c1c;
+  color: #d0d0d0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: 'ss01', 'cv11', 'kern';
+}
+
+::selection {
+  background: rgba(201, 169, 104, 0.32);
+  color: #ffffff;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
   }
-  ::selection {
-    @apply bg-luma-sun/30 text-luma-ink;
+}
+
+/* ================================================================
+   Backgrounds & masks
+================================================================ */
+
+.bg-grid {
+  background-image:
+    linear-gradient(to right, var(--grid-color) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-color) 1px, transparent 1px);
+  background-size: 64px 64px;
+}
+
+.bg-grid-fine {
+  background-image:
+    linear-gradient(to right, var(--grid-color) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-color) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.mask-fade-y {
+  mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 88%, transparent);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 88%, transparent);
+}
+
+.mask-radial {
+  mask-image: radial-gradient(ellipse at center, #000 30%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse at center, #000 30%, transparent 75%);
+}
+
+/* ================================================================
+   Hairlines, dividers, ticks
+================================================================ */
+
+.hairline {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+.hairline-strong {
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.h-rule {
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.14), transparent);
+}
+
+.tick-tl {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 8px;
+  width: 8px;
+  border-top: 1px solid currentColor;
+  border-left: 1px solid currentColor;
+  opacity: 0.4;
+}
+.tick-tr {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 8px;
+  width: 8px;
+  border-top: 1px solid currentColor;
+  border-right: 1px solid currentColor;
+  opacity: 0.4;
+}
+.tick-bl {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 8px;
+  width: 8px;
+  border-bottom: 1px solid currentColor;
+  border-left: 1px solid currentColor;
+  opacity: 0.4;
+}
+.tick-br {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  height: 8px;
+  width: 8px;
+  border-bottom: 1px solid currentColor;
+  border-right: 1px solid currentColor;
+  opacity: 0.4;
+}
+
+/* ================================================================
+   Typography utilities
+================================================================ */
+
+.tech-label {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #a0a0a0;
+}
+
+.display-xxl {
+  font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1;
+}
+
+.display-xl {
+  font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  line-height: 1.04;
+}
+
+.display-md {
+  font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 1.15;
+}
+
+.num-marker {
+  font-family: var(--font-mono), monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.05em;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+input,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #707070;
+}
+
+/* ================================================================
+   Surfaces
+================================================================ */
+
+.surface-carbon {
+  background: #1c1c1c;
+}
+
+.surface-shadow {
+  background: #282828;
+}
+
+.surface-graphite {
+  background: linear-gradient(180deg, #1c1c1c 0%, #232323 100%);
+}
+
+.surface-petrol {
+  background:
+    radial-gradient(ellipse 90% 70% at 70% 10%, #2e2e2e 0%, #1c1c1c 50%, #141414 100%);
+}
+
+/* Subtle grain — depth without sterility */
+.grain::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.035;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.6 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+/* ================================================================
+   Motion primitives
+================================================================ */
+
+@keyframes amberPulse {
+  0%,
+  100% {
+    opacity: 0.55;
   }
+  50% {
+    opacity: 1;
+  }
+}
+.amber-pulse {
+  animation: amberPulse 3.2s ease-in-out infinite;
+}
+
+@keyframes flow {
+  0% {
+    left: -2%;
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  92% {
+    opacity: 1;
+  }
+  100% {
+    left: 100%;
+    opacity: 0;
+  }
+}
+.flow-particle {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 6px;
+  width: 6px;
+  border-radius: 9999px;
+  background: var(--amber-glow);
+  box-shadow:
+    0 0 12px rgba(229, 200, 147, 0.7),
+    0 0 24px rgba(201, 169, 104, 0.35);
+  animation: flow 9s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .flow-particle {
+    animation: none;
+    opacity: 0;
+  }
+}
+
+@keyframes ticker {
+  0% {
+    transform: translateX(-50%);
+  }
+  100% {
+    transform: translateX(50%);
+  }
+}
+
+@keyframes hudIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.hud-in {
+  animation: hudIn 600ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  opacity: 0;
+}
+
+@keyframes blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+.terminal-cursor::after {
+  content: '▌';
+  margin-left: 0.05em;
+  animation: blink 1s steps(1) infinite;
+  color: var(--hud-accent, #c9a968);
+}
+
+/* ================================================================
+   Mapbox dark overrides
+================================================================ */
+
+.mapboxgl-canvas-container,
+.mapboxgl-canvas {
+  background: #141414 !important;
+}
+.mapboxgl-ctrl-attrib {
+  background: rgba(28, 28, 28, 0.7) !important;
+  color: #707070 !important;
+}
+.mapboxgl-ctrl-attrib a {
+  color: #a0a0a0 !important;
 }

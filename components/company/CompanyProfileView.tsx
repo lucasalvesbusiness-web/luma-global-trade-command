@@ -30,12 +30,12 @@ export function CompanyProfileView({
     <main className="mx-auto max-w-5xl px-6 py-12">
       <div className="mb-6 flex items-start justify-between gap-4">
         <div>
-          <p className="text-xs uppercase tracking-wider text-luma-ink/50">Empresa</p>
+          <p className="text-xs uppercase tracking-wider text-ink-400">Empresa</p>
           <h1 className="mt-1 font-display text-3xl tracking-tight">
             {company.tradeName ?? company.legalName}
           </h1>
           {company.tradeName && (
-            <p className="mt-1 text-sm text-luma-ink/60">{company.legalName}</p>
+            <p className="mt-1 text-sm text-ink-300">{company.legalName}</p>
           )}
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <StatusChip kind="verification" value={company.verificationStatus} />
@@ -52,7 +52,7 @@ export function CompanyProfileView({
         </div>
         {isOwner && (
           <Button variant="outline" asChild>
-            <Link href="/company/edit">Editar</Link>
+            <Link href="/c/edit">Editar</Link>
           </Button>
         )}
       </div>
@@ -79,7 +79,7 @@ export function CompanyProfileView({
                 <CardTitle>Sobre</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="whitespace-pre-line text-sm leading-relaxed text-luma-ink/80">
+                <p className="whitespace-pre-line text-sm leading-relaxed text-ink-100">
                   {company.description}
                 </p>
               </CardContent>
@@ -92,13 +92,13 @@ export function CompanyProfileView({
             </CardHeader>
             <CardContent>
               {company.offerings.length === 0 ? (
-                <p className="text-sm text-luma-ink/50">Sem categorias cadastradas.</p>
+                <p className="text-sm text-ink-400">Sem categorias cadastradas.</p>
               ) : (
                 <ul className="flex flex-col gap-2">
                   {company.offerings.map((o) => (
                     <li
                       key={o.id}
-                      className="flex items-center justify-between rounded-md border border-luma-ink/10 px-3 py-2"
+                      className="flex items-center justify-between rounded-md border border-white/10 px-3 py-2"
                     >
                       <span className="text-sm">{o.category}</span>
                       <Badge variant="outline">
@@ -126,7 +126,7 @@ export function CompanyProfileView({
                   radiusKm={company.serviceRadiusKm ?? undefined}
                 />
               ) : (
-                <p className="text-sm text-luma-ink/50">Sem localização cadastrada.</p>
+                <p className="text-sm text-ink-400">Sem localização cadastrada.</p>
               )}
             </CardContent>
           </Card>

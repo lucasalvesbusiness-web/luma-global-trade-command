@@ -11,7 +11,7 @@ export function ReputationBadge({ signals }: { signals: ReputationSignals }) {
     <Card>
       <CardHeader>
         <CardTitle>Reputação</CardTitle>
-        <p className="text-xs text-luma-ink/60">
+        <p className="text-xs text-ink-300">
           Sinais derivados de execução real, não de marketing.
         </p>
       </CardHeader>
@@ -23,7 +23,7 @@ export function ReputationBadge({ signals }: { signals: ReputationSignals }) {
             <span>
               {ratingDisplay}
               {signals.totalReviews > 0 && (
-                <span className="ml-1 text-xs text-luma-ink/50">
+                <span className="ml-1 text-xs text-ink-400">
                   ({signals.totalReviews})
                 </span>
               )}
@@ -45,7 +45,7 @@ export function ReputationBadge({ signals }: { signals: ReputationSignals }) {
         />
 
         {signals.confirmedDealsCount === 0 && (
-          <p className="rounded-md border border-dashed border-luma-ink/15 px-3 py-2 text-xs text-luma-ink/50">
+          <p className="rounded-md border border-dashed border-white/15 px-3 py-2 text-xs text-ink-400">
             Reputação será exibida após o primeiro negócio confirmado.
           </p>
         )}
@@ -66,8 +66,8 @@ function Row({
   return (
     <div className="flex items-start justify-between gap-3">
       <div className="flex flex-col">
-        <span className="text-luma-ink/70">{label}</span>
-        {hint && <span className="text-xs text-luma-ink/45">{hint}</span>}
+        <span className="text-ink-200">{label}</span>
+        {hint && <span className="text-xs text-ink-400">{hint}</span>}
       </div>
       <span className="font-medium">{value}</span>
     </div>

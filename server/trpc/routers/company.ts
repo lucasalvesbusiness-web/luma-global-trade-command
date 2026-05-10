@@ -44,7 +44,8 @@ export const companyRouter = router({
         latitude: z.number().min(-90).max(90).optional(),
         longitude: z.number().min(-180).max(180).optional(),
         serviceRadiusKm: z.number().int().positive().max(5000).optional(),
-        offerings: z.array(offeringSchema).min(1).max(20),
+        // Empty array allowed: company without offerings = buyer-only on the network.
+        offerings: z.array(offeringSchema).max(20).default([]),
       }),
     )
     .mutation(async ({ ctx, input }) => {

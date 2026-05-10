@@ -51,13 +51,13 @@ export function CookieBanner() {
       aria-label="Cookie preferences"
       className="fixed inset-x-0 bottom-0 z-50 flex justify-center px-4 pb-4"
     >
-      <div className="luma-glass w-full max-w-2xl rounded-2xl px-5 py-4 shadow-xl shadow-black/15 ring-1 ring-black/5">
+      <div className="surface-graphite border border-white/[0.07] w-full max-w-2xl rounded-2xl px-5 py-4 shadow-xl shadow-black/15 ring-1 ring-black/5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-5">
           <div className="flex-1">
-            <p className="text-[0.62rem] uppercase tracking-[0.3em] text-luma-olive/80">
+            <p className="text-[0.62rem] uppercase tracking-[0.3em] text-amber/80">
               Cookies & telemetria
             </p>
-            <p className="mt-1 text-[13px] leading-relaxed text-luma-ink/80">
+            <p className="mt-1 text-[13px] leading-relaxed text-ink-100">
               Usamos cookies essenciais para autenticar sua sessão. Analytics e
               captura de erros (Sentry) são opcionais e ajudam a melhorar o
               produto.{' '}
@@ -71,14 +71,14 @@ export function CookieBanner() {
             <button
               type="button"
               onClick={accept('accepted')}
-              className="rounded-full bg-luma-ink px-4 py-2 text-[12px] font-medium text-luma-offwhite transition hover:bg-luma-ink/85"
+              className="rounded-full bg-ink-900 px-4 py-2 text-[12px] font-medium text-ink-50 transition hover:bg-ink-800"
             >
               Aceitar tudo / Accept all
             </button>
             <button
               type="button"
               onClick={accept('essential-only')}
-              className="rounded-full bg-white/70 px-4 py-2 text-[12px] font-medium text-luma-ink/75 transition hover:text-luma-ink"
+              className="rounded-full bg-white/70 px-4 py-2 text-[12px] font-medium text-ink-100/75 transition hover:text-ink-100"
             >
               Só essenciais / Essential only
             </button>

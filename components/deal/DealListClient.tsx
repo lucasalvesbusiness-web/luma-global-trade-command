@@ -20,21 +20,21 @@ export function DealListClient({
   return (
     <main className="mx-auto max-w-5xl px-6 py-12">
       <header className="mb-6">
-        <p className="text-xs uppercase tracking-wider text-luma-ink/50">Deal rooms</p>
+        <p className="text-xs uppercase tracking-wider text-ink-400">Deal rooms</p>
         <h1 className="font-display text-2xl">Seus negócios</h1>
       </header>
 
       {pendingReviewsCount > 0 && (
         <Link
-          href="/reviews/pending"
-          className="mb-4 block rounded-lg border border-luma-olive/40 bg-luma-olive/10 px-4 py-3 text-sm transition-colors hover:bg-luma-olive/15"
+          href="/inbox"
+          className="mb-4 block rounded-lg border border-amber/30 bg-amber/15 px-4 py-3 text-sm transition-colors hover:bg-amber/15"
         >
           <span className="font-medium">{pendingReviewsCount}</span> avaliação(ões) pendente(s) →
         </Link>
       )}
 
       {deals.length === 0 ? (
-        <p className="rounded-lg border border-dashed border-luma-ink/15 p-8 text-center text-sm text-luma-ink/60">
+        <p className="rounded-lg border border-dashed border-white/15 p-8 text-center text-sm text-ink-300">
           Nenhum deal aberto. Use a busca para encontrar fornecedores e abrir um deal.
         </p>
       ) : (
@@ -43,15 +43,15 @@ export function DealListClient({
             const counterparty = d.viewerRole === 'BUYER' ? d.supplierCompany : d.buyerCompany;
             return (
               <li key={d.id}>
-                <Link href={`/deals/${d.id}`} className="block">
-                  <Card className="transition-colors hover:border-luma-ink/30">
+                <Link href={`/d/${d.id}`} className="block">
+                  <Card className="transition-colors hover:border-white/30">
                     <CardHeader>
                       <div className="flex items-start justify-between gap-3">
                         <div>
                           <CardTitle>{d.title}</CardTitle>
-                          <p className="mt-1 text-xs text-luma-ink/60">
+                          <p className="mt-1 text-xs text-ink-300">
                             {d.viewerRole === 'BUYER' ? 'Fornecedor: ' : 'Comprador: '}
-                            <span className="font-medium text-luma-ink/80">
+                            <span className="font-medium text-ink-100">
                               {counterparty.tradeName ?? counterparty.legalName}
                             </span>
                           </p>

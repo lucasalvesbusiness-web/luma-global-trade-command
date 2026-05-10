@@ -17,7 +17,7 @@ export async function sendDealCreatedEmail(params: {
   title: string;
   buyerName: string;
 }) {
-  const url = `${baseUrl}/deals/${params.dealId}`;
+  const url = `${baseUrl}/d/${params.dealId}`;
   const body = `
     <p style="line-height: 1.55;"><strong>${params.buyerName}</strong> abriu um novo deal: <strong>${params.title}</strong>.</p>
     <p style="margin: 24px 0;">
@@ -38,7 +38,7 @@ export async function sendDealQuotedEmail(params: {
   title: string;
   quoteFormatted: string;
 }) {
-  const url = `${baseUrl}/deals/${params.dealId}`;
+  const url = `${baseUrl}/d/${params.dealId}`;
   const body = `
     <p style="line-height: 1.55;">A cotação para <strong>${params.title}</strong> está disponível: <strong>${params.quoteFormatted}</strong>.</p>
     <p style="margin: 24px 0;">
@@ -58,7 +58,7 @@ export async function sendDealAcceptedEmail(params: {
   dealId: string;
   title: string;
 }) {
-  const url = `${baseUrl}/deals/${params.dealId}`;
+  const url = `${baseUrl}/d/${params.dealId}`;
   const body = `
     <p style="line-height: 1.55;">A cotação para <strong>${params.title}</strong> foi aceita. Pode iniciar a execução.</p>
     <p style="margin: 24px 0;">
@@ -78,7 +78,7 @@ export async function sendDealDeliveredEmail(params: {
   dealId: string;
   title: string;
 }) {
-  const url = `${baseUrl}/deals/${params.dealId}`;
+  const url = `${baseUrl}/d/${params.dealId}`;
   const body = `
     <p style="line-height: 1.55;">A entrega de <strong>${params.title}</strong> foi declarada concluída pelo fornecedor. Confirme o recebimento ou abra divergência.</p>
     <p style="margin: 24px 0;">
@@ -98,7 +98,7 @@ export async function sendDealConfirmedEmail(params: {
   dealId: string;
   title: string;
 }) {
-  const url = `${baseUrl}/deals/${params.dealId}`;
+  const url = `${baseUrl}/d/${params.dealId}`;
   const body = `
     <p style="line-height: 1.55;">A entrega de <strong>${params.title}</strong> foi confirmada pela contraparte. O negócio entra na sua reputação.</p>
     <p style="margin: 24px 0;">

@@ -25,14 +25,14 @@ export function CompanyMap({ centerLat, centerLng, radiusKm, className }: Compan
     if (!TOKEN) {
       // Fail soft: render a textual fallback instead of a broken canvas.
       containerRef.current.innerHTML =
-        '<div class="flex h-full w-full items-center justify-center text-xs text-luma-ink/50">Defina NEXT_PUBLIC_MAPBOX_TOKEN para ver o mapa.</div>';
+        '<div class="flex h-full w-full items-center justify-center text-xs text-ink-400">Defina NEXT_PUBLIC_MAPBOX_TOKEN para ver o mapa.</div>';
       return;
     }
 
     mapboxgl.accessToken = TOKEN;
     const map = new mapboxgl.Map({
       container: containerRef.current,
-      style: 'mapbox://styles/mapbox/outdoors-v12',
+      style: 'mapbox://styles/mapbox/dark-v11',
       center: [centerLng, centerLat],
       zoom: radiusKm ? Math.max(8, 12 - Math.log2(radiusKm)) : 12,
       attributionControl: false,
@@ -40,7 +40,7 @@ export function CompanyMap({ centerLat, centerLng, radiusKm, className }: Compan
     });
     mapRef.current = map;
 
-    new mapboxgl.Marker({ color: '#5C6F4F' })
+    new mapboxgl.Marker({ color: '#C9A968' })
       .setLngLat([centerLng, centerLat])
       .addTo(map);
 
@@ -59,13 +59,13 @@ export function CompanyMap({ centerLat, centerLng, radiusKm, className }: Compan
         id: 'service-radius-fill',
         type: 'fill',
         source: 'service-radius',
-        paint: { 'fill-color': '#5C6F4F', 'fill-opacity': 0.12 },
+        paint: { 'fill-color': '#C9A968', 'fill-opacity': 0.08 },
       });
       map.addLayer({
         id: 'service-radius-line',
         type: 'line',
         source: 'service-radius',
-        paint: { 'line-color': '#5C6F4F', 'line-width': 1.5, 'line-opacity': 0.6 },
+        paint: { 'line-color': '#C9A968', 'line-width': 1, 'line-opacity': 0.5 },
       });
     });
 
@@ -78,7 +78,7 @@ export function CompanyMap({ centerLat, centerLng, radiusKm, className }: Compan
   return (
     <div
       ref={containerRef}
-      className={className ?? 'h-72 w-full overflow-hidden rounded-lg bg-luma-sand/30'}
+      className={className ?? 'h-72 w-full overflow-hidden rounded-md bg-ink-900'}
     />
   );
 }

@@ -22,12 +22,12 @@ export function VerificationsAdminClient({ initialItems }: { initialItems: Item[
   return (
     <main className="mx-auto max-w-4xl px-6 py-12">
       <header className="mb-6">
-        <p className="text-xs uppercase tracking-wider text-luma-ink/50">Admin</p>
+        <p className="text-xs uppercase tracking-wider text-ink-400">Admin</p>
         <h1 className="font-display text-2xl">Verificações pendentes</h1>
       </header>
 
       {items.length === 0 ? (
-        <p className="text-sm text-luma-ink/60">Nenhuma verificação pendente no momento.</p>
+        <p className="text-sm text-ink-300">Nenhuma verificação pendente no momento.</p>
       ) : (
         <ul className="flex flex-col gap-4">
           {items.map((item) => (
@@ -35,7 +35,7 @@ export function VerificationsAdminClient({ initialItems }: { initialItems: Item[
               <Card>
                 <CardHeader>
                   <CardTitle>{item.company.tradeName ?? item.company.legalName}</CardTitle>
-                  <p className="text-xs uppercase tracking-wider text-luma-ink/50">
+                  <p className="text-xs uppercase tracking-wider text-ink-400">
                     {item.kind} · CNPJ {item.company.taxId}
                   </p>
                 </CardHeader>
@@ -49,7 +49,7 @@ export function VerificationsAdminClient({ initialItems }: { initialItems: Item[
                     Ver artefato
                   </a>
                   {item.notes && (
-                    <p className="mt-2 text-sm text-luma-ink/70">{item.notes}</p>
+                    <p className="mt-2 text-sm text-ink-200">{item.notes}</p>
                   )}
                   <div className="mt-4 flex gap-2">
                     <Button

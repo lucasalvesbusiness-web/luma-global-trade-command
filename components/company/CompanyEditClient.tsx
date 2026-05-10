@@ -49,7 +49,7 @@ export function CompanyEditClient({
         longitude: num('longitude') ?? null,
         serviceRadiusKm: num('serviceRadiusKm') ?? null,
       });
-      router.push(`/company/${company.slug}`);
+      router.push(`/c/${company.slug}`);
       router.refresh();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Erro ao atualizar';
@@ -156,13 +156,13 @@ export function CompanyEditClient({
               {artifacts.map((a) => (
                 <li
                   key={a.id}
-                  className="flex items-center justify-between rounded-md border border-luma-ink/10 px-3 py-2 text-sm"
+                  className="flex items-center justify-between rounded-md border border-white/10 px-3 py-2 text-sm"
                 >
                   <div className="min-w-0 flex-1">
                     <a href={a.url} target="_blank" rel="noreferrer" className="truncate underline">
                       {a.kind} · {a.url}
                     </a>
-                    {a.notes && <p className="mt-1 text-xs text-luma-ink/60">{a.notes}</p>}
+                    {a.notes && <p className="mt-1 text-xs text-ink-300">{a.notes}</p>}
                   </div>
                   <Badge
                     variant={
@@ -180,13 +180,13 @@ export function CompanyEditClient({
             </ul>
           )}
 
-          <div className="rounded-md border border-dashed border-luma-ink/15 p-3">
+          <div className="rounded-md border border-dashed border-white/15 p-3">
             <div className="flex flex-col gap-2">
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="artKind">Tipo</Label>
                 <select
                   id="artKind"
-                  className="h-10 rounded-md border border-luma-ink/15 bg-luma-offwhite px-3 text-sm"
+                  className="h-10 rounded-md border border-white/15 bg-ink-900 px-3 text-sm"
                   value={artKind}
                   onChange={(e) => setArtKind(e.target.value as typeof artKind)}
                 >

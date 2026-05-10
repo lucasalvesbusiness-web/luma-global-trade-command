@@ -11,15 +11,15 @@ export default async function DealDetailPage({
 }) {
   const { id } = await params;
   const session = await auth();
-  if (!session?.user) redirect(`/auth/sign-in?callbackUrl=/deals/${id}`);
-  if (!session.user.companyId) redirect('/onboarding');
+  if (!session?.user) redirect(`/auth/sign-in?callbackUrl=/d/${id}`);
+  if (!session.user.companyId) redirect('/start');
 
   const deal = await repositories.dealRoom.findById(id);
   if (!deal) notFound();
 
   const isBuyer = deal.buyerCompanyId === session.user.companyId;
   const isSupplier = deal.supplierCompanyId === session.user.companyId;
-  if (!isBuyer && !isSupplier) redirect('/deals');
+  if (!isBuyer && !isSupplier) redirect('/d');
 
   const events = await repositories.dealRoom.listAuditEvents(id);
 

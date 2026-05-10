@@ -34,10 +34,10 @@ export function DiscoveryClient() {
     <main className="mx-auto flex h-screen max-w-7xl flex-col gap-4 px-6 py-6">
       <header className="flex items-baseline justify-between">
         <div>
-          <p className="text-xs uppercase tracking-wider text-luma-ink/50">Descobrir</p>
+          <p className="text-xs uppercase tracking-wider text-ink-400">Descobrir</p>
           <h1 className="font-display text-2xl">Empresas verificáveis</h1>
         </div>
-        <p className="text-xs text-luma-ink/60">
+        <p className="text-xs text-ink-300">
           {search.isFetching ? 'buscando…' : `${results.length} resultado(s)`}
         </p>
       </header>
@@ -49,7 +49,7 @@ export function DiscoveryClient() {
 
         <section className="flex flex-col gap-3 overflow-y-auto pr-1">
           {results.length === 0 && !search.isFetching ? (
-            <p className="rounded-lg border border-dashed border-luma-ink/15 p-6 text-center text-sm text-luma-ink/50">
+            <p className="rounded-lg border border-dashed border-white/15 p-6 text-center text-sm text-ink-400">
               Nenhuma empresa encontrada com os filtros atuais.
             </p>
           ) : (

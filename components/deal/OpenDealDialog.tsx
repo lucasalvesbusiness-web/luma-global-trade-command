@@ -58,7 +58,7 @@ export function OpenDealDialog({
         title,
         scopePayload,
       });
-      router.push(`/deals/${created.id}`);
+      router.push(`/d/${created.id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao abrir deal');
     }
@@ -71,7 +71,7 @@ export function OpenDealDialog({
   }
 
   return (
-    <div className="rounded-lg border border-luma-ink/15 bg-luma-offwhite/80 p-4">
+    <div className="rounded-lg border border-white/15 bg-ink-850 p-4">
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="title">Título do deal</Label>
@@ -96,8 +96,8 @@ export function OpenDealDialog({
                   className={
                     'flex-1 rounded-md border px-2 py-1.5 text-xs transition-colors ' +
                     (active
-                      ? 'border-luma-ink bg-luma-ink text-luma-offwhite'
-                      : 'border-luma-ink/15 text-luma-ink/70 hover:border-luma-ink/30')
+                      ? 'border-white/15 bg-ink-900 text-ink-50'
+                      : 'border-white/15 text-ink-200 hover:border-white/30')
                   }
                 >
                   {labels[m]}

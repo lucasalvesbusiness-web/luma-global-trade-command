@@ -14,15 +14,15 @@ export function CompanyCard({ company }: { company: DiscoveryResult }) {
 
   return (
     <Link
-      href={`/company/${company.slug}`}
+      href={`/c/${company.slug}`}
       onMouseEnter={() => setHover(company.id)}
       onMouseLeave={() => setHover(null)}
       onClick={() => setSelected(company.id)}
       className={cn(
-        'block rounded-lg border bg-luma-offwhite/60 p-4 transition-all',
+        'block rounded-lg border bg-ink-850 p-4 transition-all',
         active
-          ? 'border-luma-ink shadow-md'
-          : 'border-luma-ink/10 hover:border-luma-ink/30',
+          ? 'border-white/15 shadow-md'
+          : 'border-white/10 hover:border-white/30',
       )}
     >
       <div className="flex items-start justify-between gap-2">
@@ -31,7 +31,7 @@ export function CompanyCard({ company }: { company: DiscoveryResult }) {
             {company.tradeName ?? company.legalName}
           </h3>
           {company.city && (
-            <p className="mt-0.5 text-xs text-luma-ink/60">
+            <p className="mt-0.5 text-xs text-ink-300">
               {company.city}
               {company.state ? ` · ${company.state}` : ''}
               {company.distanceKm !== null && ` · ${company.distanceKm} km`}
@@ -42,7 +42,7 @@ export function CompanyCard({ company }: { company: DiscoveryResult }) {
       </div>
 
       {company.description && (
-        <p className="mt-2 line-clamp-2 text-sm text-luma-ink/70">{company.description}</p>
+        <p className="mt-2 line-clamp-2 text-sm text-ink-200">{company.description}</p>
       )}
 
       {company.categories.length > 0 && (
@@ -59,17 +59,17 @@ export function CompanyCard({ company }: { company: DiscoveryResult }) {
       )}
 
       {(company.confirmedDealsCount > 0 || company.avgRating !== null) && (
-        <div className="mt-3 flex items-center gap-3 text-xs text-luma-ink/60">
+        <div className="mt-3 flex items-center gap-3 text-xs text-ink-300">
           {company.confirmedDealsCount > 0 && (
             <span>
-              <strong className="text-luma-ink/80">{company.confirmedDealsCount}</strong>{' '}
+              <strong className="text-ink-100">{company.confirmedDealsCount}</strong>{' '}
               negócio{company.confirmedDealsCount !== 1 ? 's' : ''} concluído
               {company.confirmedDealsCount !== 1 ? 's' : ''}
             </span>
           )}
           {company.avgRating !== null && (
             <span>
-              ★ <strong className="text-luma-ink/80">{company.avgRating.toFixed(1)}</strong>
+              ★ <strong className="text-ink-100">{company.avgRating.toFixed(1)}</strong>
             </span>
           )}
         </div>

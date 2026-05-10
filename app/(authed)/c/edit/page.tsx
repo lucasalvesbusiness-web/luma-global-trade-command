@@ -7,7 +7,7 @@ import { CompanyEditClient } from '@/components/company/CompanyEditClient';
 
 export default async function CompanyEditPage() {
   const session = await auth();
-  if (!session?.user) redirect('/auth/sign-in?callbackUrl=/company/edit');
+  if (!session?.user) redirect('/auth/sign-in?callbackUrl=/c/edit');
   if (session.user.companyRole !== 'OWNER' || !session.user.companyId) {
     redirect('/');
   }

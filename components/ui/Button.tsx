@@ -5,23 +5,27 @@ import { forwardRef, type ButtonHTMLAttributes } from 'react';
 import { cn } from '@/lib/utils';
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luma-ink/40 disabled:pointer-events-none disabled:opacity-50',
+  'group inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium tracking-wide uppercase transition-all duration-300 ease-cinematic focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber/50 focus-visible:ring-offset-2 focus-visible:ring-offset-spectre-carbon disabled:pointer-events-none disabled:opacity-40',
   {
     variants: {
       variant: {
-        default: 'bg-luma-ink text-luma-offwhite hover:bg-luma-ink/90',
-        outline: 'border border-luma-ink/15 bg-transparent hover:bg-luma-ink/5',
-        ghost: 'hover:bg-luma-ink/5',
-        subtle: 'bg-luma-sand text-luma-ink hover:bg-luma-sand/80',
-        danger: 'bg-red-600 text-white hover:bg-red-700',
+        primary:
+          'border border-amber/60 bg-amber/10 text-amber-glow hover:bg-amber/20 hover:border-amber',
+        outline:
+          'border border-white/15 bg-transparent text-ink-100 hover:border-white/35 hover:bg-white/[0.03]',
+        ghost: 'text-ink-100 hover:bg-white/[0.04]',
+        subtle:
+          'border border-transparent bg-ink-800 text-ink-100 hover:bg-ink-750',
+        danger:
+          'border border-destructive/40 bg-destructive/10 text-destructive hover:bg-destructive/20',
       },
       size: {
-        sm: 'h-8 px-3',
-        md: 'h-10 px-4',
-        lg: 'h-11 px-6 text-base',
+        sm: 'h-8 px-3 text-[11px]',
+        md: 'h-10 px-5 text-xs',
+        lg: 'h-12 px-7 text-sm',
       },
     },
-    defaultVariants: { variant: 'default', size: 'md' },
+    defaultVariants: { variant: 'primary', size: 'md' },
   },
 );
 
@@ -44,3 +48,5 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   },
 );
 Button.displayName = 'Button';
+
+export { buttonVariants };

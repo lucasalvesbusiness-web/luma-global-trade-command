@@ -24,8 +24,12 @@ const variantByValue: Record<string, BadgeProps['variant']> = {
   EMAIL_VERIFIED: 'outline',
   UNVERIFIED: 'muted',
   CONFIRMED: 'verified',
+  CLOSED: 'muted',
   DISPUTED: 'warning',
   CANCELLED: 'muted',
+  IN_PROGRESS: 'default',
+  ACCEPTED: 'verified',
+  DELIVERED: 'default',
 };
 
 export function StatusChip({

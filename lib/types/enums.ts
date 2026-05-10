@@ -20,18 +20,15 @@ export const VERIFICATION_STATUSES: readonly VerificationStatus[] = [
   'DOC_VERIFIED',
 ];
 
-export type CompanyMemberRole =
-  | 'OWNER'
-  | 'COMMERCIAL'
-  | 'OPERATIONS'
-  | 'FINANCE'
-  | 'BUYER';
+// Note: BUYER role was removed in P5.1 — every Company is contextually
+// a buyer or supplier per deal, not as an intra-company role. Existing
+// BUYER members were migrated to OPERATIONS in `relax_member_roles`.
+export type CompanyMemberRole = 'OWNER' | 'COMMERCIAL' | 'OPERATIONS' | 'FINANCE';
 export const COMPANY_MEMBER_ROLES: readonly CompanyMemberRole[] = [
   'OWNER',
   'COMMERCIAL',
   'OPERATIONS',
   'FINANCE',
-  'BUYER',
 ];
 
 export type DealTemplate = 'ONE_OFF' | 'RECURRING' | 'PRODUCT_SUPPLY';

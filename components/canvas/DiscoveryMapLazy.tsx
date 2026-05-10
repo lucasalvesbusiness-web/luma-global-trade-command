@@ -7,7 +7,7 @@ export const DiscoveryMapLazy = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="flex h-full w-full items-center justify-center rounded-lg bg-luma-sand/30 text-sm text-luma-ink/50">
+      <div className="flex h-full w-full items-center justify-center rounded-lg bg-ink-850 text-sm text-ink-400">
         carregando mapa…
       </div>
     ),

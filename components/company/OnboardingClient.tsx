@@ -54,10 +54,7 @@ export function OnboardingClient() {
     e.preventDefault();
     setError(null);
     const fd = new FormData(e.currentTarget);
-    if (offerings.length === 0) {
-      setError('Selecione ao menos uma categoria de atuação.');
-      return;
-    }
+    // Offerings opcionais: empresa sem ofertas = só compradora.
 
     const lat = fd.get('latitude');
     const lng = fd.get('longitude');
@@ -76,7 +73,7 @@ export function OnboardingClient() {
         serviceRadiusKm: radius ? Number(radius) : undefined,
         offerings: offerings.map((o) => ({ category: o.category, modality: o.modality })),
       });
-      router.push(`/company/${company.slug}`);
+      router.push(`/c/${company.slug}`);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Erro ao criar empresa';
       setError(message);
@@ -120,7 +117,7 @@ export function OnboardingClient() {
             </Section>
 
             <Section title="Categorias de atuação">
-              <p className="text-xs text-luma-ink/60">
+              <p className="text-xs text-ink-300">
                 Selecione as categorias do wedge que sua empresa atende e a modalidade.
               </p>
               <div className="flex flex-col gap-2">
@@ -129,7 +126,7 @@ export function OnboardingClient() {
                   return (
                     <div
                       key={cat}
-                      className="flex items-center justify-between rounded-md border border-luma-ink/10 bg-luma-offwhite px-3 py-2"
+                      className="flex items-center justify-between rounded-md border border-white/10 bg-ink-900 px-3 py-2"
                     >
                       <label className="flex items-center gap-2 text-sm">
                         <input
@@ -141,7 +138,7 @@ export function OnboardingClient() {
                       </label>
                       {selected && (
                         <select
-                          className="rounded border border-luma-ink/15 bg-luma-offwhite px-2 py-1 text-xs"
+                          className="rounded border border-white/15 bg-ink-900 px-2 py-1 text-xs"
                           value={selected.modality}
                           onChange={(e) => setModality(cat, e.target.value as Modality)}
                         >
@@ -174,8 +171,8 @@ export function OnboardingClient() {
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <fieldset className="flex flex-col gap-3 border-t border-luma-ink/5 pt-4 first:border-t-0 first:pt-0">
-      <legend className="text-xs font-medium uppercase tracking-wider text-luma-ink/50">
+    <fieldset className="flex flex-col gap-3 border-t border-white/5 pt-4 first:border-t-0 first:pt-0">
+      <legend className="text-xs font-medium uppercase tracking-wider text-ink-400">
         {title}
       </legend>
       {children}
