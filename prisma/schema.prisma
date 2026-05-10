@@ -113,6 +113,7 @@ model Company {
   latitude           Float?
   longitude          Float?
   serviceRadiusKm    Int?
+  heroImageUrl       String?
   // VerificationStatus: UNVERIFIED | EMAIL_VERIFIED | DOC_VERIFIED
   verificationStatus String             @default("UNVERIFIED")
   createdAt          DateTime           @default(now())

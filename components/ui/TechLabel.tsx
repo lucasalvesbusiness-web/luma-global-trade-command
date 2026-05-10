@@ -1,14 +1,17 @@
+import type { HTMLAttributes } from 'react';
+
 import { cn } from '@/lib/utils';
 
-type TechLabelProps = {
-  children: React.ReactNode;
+type TechLabelProps = HTMLAttributes<HTMLSpanElement> & {
   dot?: boolean;
-  className?: string;
 };
 
-export function TechLabel({ children, dot = false, className }: TechLabelProps) {
+export function TechLabel({ children, dot = false, className, ...rest }: TechLabelProps) {
   return (
-    <span className={cn('tech-label inline-flex items-center gap-2', className)}>
+    <span
+      className={cn('tech-label inline-flex items-center gap-2', className)}
+      {...rest}
+    >
       {dot && (
         <span
           aria-hidden

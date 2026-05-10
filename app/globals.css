@@ -346,3 +346,127 @@ textarea::placeholder {
 .mapboxgl-ctrl-attrib a {
   color: #a0a0a0 !important;
 }
+
+/* ================================================================
+   CityMap (TimeLine) — self marker + radar markers
+================================================================ */
+
+.lastro-self-marker {
+  position: relative;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.lastro-self-marker .lastro-self-pulse {
+  position: absolute;
+  inset: -10px;
+  border-radius: 9999px;
+  background: rgba(201, 169, 104, 0.18);
+  box-shadow: 0 0 0 1px rgba(201, 169, 104, 0.4);
+  animation: selfPulse 2.8s ease-in-out infinite;
+}
+
+.lastro-self-marker .lastro-self-core {
+  position: relative;
+  width: 14px;
+  height: 14px;
+  border-radius: 9999px;
+  background: #e5c893;
+  border: 2px solid #c9a968;
+  box-shadow:
+    0 0 12px rgba(229, 200, 147, 0.7),
+    0 0 28px rgba(201, 169, 104, 0.5);
+}
+
+.lastro-self-marker .lastro-self-label {
+  position: absolute;
+  bottom: -28px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: rgba(28, 28, 28, 0.95);
+  border: 1px solid rgba(201, 169, 104, 0.4);
+  color: #e5c893;
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+@keyframes selfPulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+  50% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lastro-self-marker .lastro-self-pulse {
+    animation: none;
+    opacity: 0.4;
+  }
+}
+
+/* Other-company markers */
+.lastro-marker {
+  width: 14px;
+  height: 14px;
+  border-radius: 9999px;
+  border: 1.5px solid rgba(255, 255, 255, 0.35);
+  background: #a0a0a0;
+  cursor: pointer;
+  transition:
+    transform 200ms cubic-bezier(0.22, 1, 0.36, 1),
+    background 200ms ease,
+    box-shadow 200ms ease;
+  padding: 0;
+}
+.lastro-marker:hover,
+.lastro-marker[data-active='true'] {
+  transform: scale(1.4);
+  z-index: 2;
+}
+.lastro-marker[data-connected='true'] {
+  background: #c9a968;
+  border-color: #e5c893;
+  box-shadow:
+    0 0 0 2px rgba(201, 169, 104, 0.25),
+    0 4px 12px rgba(0, 0, 0, 0.5);
+}
+.lastro-marker[data-connected='false'][data-watched='true'] {
+  background: #d0d0d0;
+  border-color: rgba(201, 169, 104, 0.6);
+}
+.lastro-marker[data-connected='false'][data-watched='false'] {
+  background: #7a7a7a;
+}
+
+/* Popup styling */
+.lastro-popup .mapboxgl-popup-content {
+  background: linear-gradient(180deg, #1c1c1c 0%, #232323 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 0;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.55);
+  color: #d0d0d0;
+}
+.lastro-popup .mapboxgl-popup-tip {
+  border-top-color: #232323 !important;
+  border-bottom-color: #232323 !important;
+}
+.lastro-popup .mapboxgl-popup-close-button {
+  display: none;
+}

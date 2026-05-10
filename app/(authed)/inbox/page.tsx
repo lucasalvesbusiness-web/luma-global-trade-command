@@ -5,7 +5,6 @@ import { auth } from '@/server/auth/config';
 import { db } from '@/lib/db';
 import type { CompanyMemberRole } from '@/lib/types/enums';
 import { repositories } from '@/server/repositories';
-import { ActivityFeed } from '@/components/inbox/ActivityFeed';
 import { Button } from '@/components/ui/Button';
 import { Reveal } from '@/components/ui/Reveal';
 import { StatusChip } from '@/components/ui/StatusChip';
@@ -47,9 +46,9 @@ export default async function InboxPage() {
             <TechLabel dot className="mb-2">
               Caixa
             </TechLabel>
-            <h1 className="display-xl text-3xl text-ink-50 md:text-4xl">Centro operacional</h1>
+            <h1 className="display-xl text-3xl text-ink-50 md:text-4xl">Caixa</h1>
             <p className="mt-2 text-sm text-ink-300">
-              Pendências, deals em movimento, atividade recente da rede.
+              Pendências e deals que esperam ação sua. A timeline da rede vive na home.
             </p>
           </div>
         </header>
@@ -103,10 +102,6 @@ export default async function InboxPage() {
         </div>
 
         <div className="space-y-8">
-          <Reveal>
-            <ActivityFeed />
-          </Reveal>
-
           <Reveal>
             <div className="rounded-md border border-white/[0.07] bg-ink-850/60 p-6">
               <TechLabel className="mb-3">Atalhos</TechLabel>

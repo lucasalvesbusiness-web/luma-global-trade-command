@@ -45,6 +45,7 @@ export type UpdateCompanyInput = Partial<{
   latitude: number | null;
   longitude: number | null;
   serviceRadiusKm: number | null;
+  heroImageUrl: string | null;
 }>;
 
 export interface CompanyRepository {

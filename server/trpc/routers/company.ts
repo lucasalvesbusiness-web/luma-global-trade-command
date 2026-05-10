@@ -75,6 +75,7 @@ export const companyRouter = router({
         latitude: z.number().min(-90).max(90).nullable().optional(),
         longitude: z.number().min(-180).max(180).nullable().optional(),
         serviceRadiusKm: z.number().int().positive().max(5000).nullable().optional(),
+        heroImageUrl: z.string().url().max(500).nullable().optional(),
       }),
     )
     .mutation(({ ctx, input }) =>

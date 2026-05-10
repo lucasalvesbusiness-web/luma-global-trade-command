@@ -3,6 +3,7 @@ import { activityRouter } from '@/server/trpc/routers/activity';
 import { companyRouter } from '@/server/trpc/routers/company';
 import { dealRoomRouter } from '@/server/trpc/routers/deal-room';
 import { discoveryRouter } from '@/server/trpc/routers/discovery';
+import { homeRouter } from '@/server/trpc/routers/home';
 import { membersRouter } from '@/server/trpc/routers/members';
 import { notificationsRouter } from '@/server/trpc/routers/notifications';
 import { reviewRouter } from '@/server/trpc/routers/review';
@@ -15,6 +16,7 @@ export const appRouter = router({
   company: companyRouter,
   dealRoom: dealRoomRouter,
   discovery: discoveryRouter,
+  home: homeRouter,
   members: membersRouter,
   notifications: notificationsRouter,
   review: reviewRouter,

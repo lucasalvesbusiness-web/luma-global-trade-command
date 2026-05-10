@@ -14,6 +14,13 @@ type NavItem = {
 };
 
 const Icon = {
+  home: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-4 w-4">
+      <circle cx="12" cy="12" r="2" />
+      <path d="M12 4v3M12 17v3M4 12h3M17 12h3" />
+      <circle cx="12" cy="12" r="7" strokeDasharray="2 3" />
+    </svg>
+  ),
   inbox: (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-4 w-4">
       <path d="M22 12h-6l-2 3h-4l-2-3H2" />
@@ -62,6 +69,7 @@ export function Sidebar({
   const pathname = usePathname();
 
   const items: NavItem[] = [
+    { href: '/home', label: 'Home', icon: Icon.home },
     { href: '/inbox', label: 'Caixa', icon: Icon.inbox },
     { href: '/d', label: 'Deals', icon: Icon.deals },
     { href: '/explore', label: 'Explorar', icon: Icon.explore },

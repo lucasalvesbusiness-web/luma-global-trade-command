@@ -41,6 +41,7 @@ export function CompanyEditClient({
 
   // Identity
   const [tradeName, setTradeName] = useState(company.tradeName ?? '');
+  const [heroImageUrl, setHeroImageUrl] = useState(company.heroImageUrl ?? '');
   // Location
   const [city, setCity] = useState(company.city ?? '');
   const [stateCode, setStateCode] = useState(company.state ?? '');
@@ -69,7 +70,10 @@ export function CompanyEditClient({
     setError(null);
     try {
       if (section === 'identity') {
-        await update.mutateAsync({ tradeName: tradeName || null });
+        await update.mutateAsync({
+          tradeName: tradeName || null,
+          heroImageUrl: heroImageUrl || null,
+        });
       } else if (section === 'location') {
         await update.mutateAsync({
           city: city || null,
@@ -162,6 +166,12 @@ export function CompanyEditClient({
                 value={tradeName}
                 onChange={setTradeName}
                 placeholder="ex: Refrigera Sul"
+              />
+              <Field
+                label="Foto de capa (URL)"
+                value={heroImageUrl}
+                onChange={setHeroImageUrl}
+                placeholder="https://… (aparece no popup do mapa)"
               />
               <SaveButton onClick={() => saveSection('identity')} pending={update.isPending} />
             </SectionWrap>

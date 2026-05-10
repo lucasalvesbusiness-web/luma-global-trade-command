@@ -13,7 +13,7 @@ import { LandingNetworkCanvas } from '@/components/canvas/LandingNetworkCanvas';
 
 export default async function HomePage() {
   const session = await auth();
-  if (session?.user?.companyId) redirect('/inbox');
+  if (session?.user?.companyId) redirect('/home');
   if (session?.user) redirect('/start');
 
   return (
