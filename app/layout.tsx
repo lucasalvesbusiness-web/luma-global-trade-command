@@ -3,7 +3,6 @@ import { Inter, Fraunces } from 'next/font/google';
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
 
-import { TrpcProvider } from '@/lib/trpc/react';
 import { CookieBanner } from '@/components/legal/CookieBanner';
 import './globals.css';
 
@@ -21,12 +20,11 @@ const display = Fraunces({
 
 export const metadata: Metadata = {
   title: {
-    default: 'Luma Global Trade Command',
-    template: '%s · Luma Global Trade Command',
+    default: 'Rede de Confiança Transacional B2B',
+    template: '%s · Rede de Confiança B2B',
   },
   description:
-    'Single Operational Canvas for Agroexport Buyers — Da origem natural ao mercado global, com inteligência, padrão e controle.',
-  applicationName: 'Luma Global Trade Command',
+    'Infraestrutura de confiança transacional entre empresas — descoberta, deal room auditável e reputação derivada de execução real.',
   robots: { index: false, follow: false },
 };
 
@@ -42,7 +40,7 @@ export default async function RootLayout({
     <html lang={locale} className={`${sans.variable} ${display.variable}`}>
       <body>
         <NextIntlClientProvider locale={locale} messages={messages}>
-          <TrpcProvider>{children}</TrpcProvider>
+          {children}
           <CookieBanner />
         </NextIntlClientProvider>
       </body>

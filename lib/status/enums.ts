@@ -1,72 +1,34 @@
 /**
- * Labels PT-BR e EN para os enums operacionais do Luma Global Trade Command.
- * O backend usa os códigos dos enums do Prisma; a UI usa estes labels por idioma.
- * Referência canônica: docs/06-operational-ontology-and-object-model.md
+ * PT-BR / EN labels for operational enums of the B2B trust network.
+ * Backend uses Prisma enum codes; UI consumes these labels by locale.
+ * Canonical reference: docs/06-operational-ontology-and-object-model.md
  */
 
 import type { Locale } from '@/lib/i18n/config';
 
 export type StatusLabel = Record<Locale, string>;
 
-export const availabilityStatusLabels: Record<string, StatusLabel> = {
-  AVAILABLE_NOW: { 'pt-br': 'Disponível agora', en: 'Available now' },
-  PRE_RESERVE_OPEN: { 'pt-br': 'Pré-reserva aberta', en: 'Pre-reserve open' },
-  UNDER_TECHNICAL_VALIDATION: {
-    'pt-br': 'Em validação técnica',
-    en: 'Under technical validation',
-  },
-  LIMITED_AVAILABILITY: {
-    'pt-br': 'Disponibilidade limitada',
-    en: 'Limited availability',
-  },
-  UNDER_CONSULTATION: { 'pt-br': 'Sob consulta', en: 'Under consultation' },
-  NOT_AVAILABLE_FOR_DESTINATION: {
-    'pt-br': 'Não disponível para este destino',
-    en: 'Not available for this destination',
-  },
+export const verificationStatusLabels: Record<string, StatusLabel> = {
+  UNVERIFIED: { 'pt-br': 'Não verificada', en: 'Unverified' },
+  EMAIL_VERIFIED: { 'pt-br': 'Email verificado', en: 'Email verified' },
+  DOC_VERIFIED: { 'pt-br': 'Documentação verificada', en: 'Documentation verified' },
 };
 
-export const proposalStatusLabels: Record<string, StatusLabel> = {
-  DRAFT: { 'pt-br': 'Rascunho', en: 'Draft' },
-  SUBMITTED: { 'pt-br': 'Enviada', en: 'Submitted' },
-  UNDER_COMMERCIAL_REVIEW: {
-    'pt-br': 'Em análise comercial',
-    en: 'Under commercial review',
-  },
-  UNDER_OPERATIONAL_REVIEW: {
-    'pt-br': 'Em análise operacional',
-    en: 'Under operational review',
-  },
-  DOCUMENTATION_REVIEW_REQUIRED: {
-    'pt-br': 'Revisão documental necessária',
-    en: 'Documentation review required',
-  },
-  ADJUSTMENT_REQUESTED: { 'pt-br': 'Ajuste solicitado', en: 'Adjustment requested' },
-  APPROVED_FOR_NEGOTIATION: {
-    'pt-br': 'Aprovada para negociação',
-    en: 'Approved for negotiation',
-  },
-  REJECTED: { 'pt-br': 'Rejeitada', en: 'Rejected' },
-  CONVERTED_TO_OPERATION: {
-    'pt-br': 'Convertida em operação',
-    en: 'Converted to operation',
-  },
+export const dealTemplateLabels: Record<string, StatusLabel> = {
+  ONE_OFF: { 'pt-br': 'Serviço pontual', en: 'One-off service' },
+  RECURRING: { 'pt-br': 'Serviço recorrente', en: 'Recurring service' },
+  PRODUCT_SUPPLY: { 'pt-br': 'Fornecimento de produto', en: 'Product supply' },
 };
 
-export const complianceGateStatusLabels: Record<string, StatusLabel> = {
-  PREVIEW_AVAILABLE: { 'pt-br': 'Prévia disponível', en: 'Preview available' },
-  REQUIREMENTS_PENDING: { 'pt-br': 'Requisitos pendentes', en: 'Requirements pending' },
-  DOCUMENTATION_REQUIRED: {
-    'pt-br': 'Documentação requerida',
-    en: 'Documentation required',
-  },
-  SUBJECT_TO_FINAL_VALIDATION: {
-    'pt-br': 'Sujeito à validação final',
-    en: 'Subject to final validation',
-  },
-  BLOCKED: { 'pt-br': 'Bloqueado', en: 'Blocked' },
-  CLEARED_INTERNALLY: {
-    'pt-br': 'Liberado internamente',
-    en: 'Cleared internally',
-  },
+export const dealRoomStatusLabels: Record<string, StatusLabel> = {
+  OPENED: { 'pt-br': 'Aberto', en: 'Opened' },
+  SCOPED: { 'pt-br': 'Escopo definido', en: 'Scoped' },
+  QUOTED: { 'pt-br': 'Cotado', en: 'Quoted' },
+  ACCEPTED: { 'pt-br': 'Aceito', en: 'Accepted' },
+  IN_PROGRESS: { 'pt-br': 'Em execução', en: 'In progress' },
+  DELIVERED: { 'pt-br': 'Entregue', en: 'Delivered' },
+  CONFIRMED: { 'pt-br': 'Confirmado', en: 'Confirmed' },
+  CLOSED: { 'pt-br': 'Encerrado', en: 'Closed' },
+  DISPUTED: { 'pt-br': 'Em disputa', en: 'Disputed' },
+  CANCELLED: { 'pt-br': 'Cancelado', en: 'Cancelled' },
 };

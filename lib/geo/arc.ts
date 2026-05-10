@@ -1,4 +1,4 @@
-import type { LatLng } from '@/lib/canvas/types';
+import type { LatLng } from '@/lib/geo/types';
 
 /**
  * Gera a rota great-circle (o menor arco sobre a esfera) entre dois pontos,

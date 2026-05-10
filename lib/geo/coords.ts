@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-import type { LatLng } from '@/lib/canvas/types';
+import type { LatLng } from '@/lib/geo/types';
 
 /**
  * Converte latitude/longitude (graus) para um ponto 3D na superfície de uma

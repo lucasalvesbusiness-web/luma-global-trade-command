@@ -1,150 +1,95 @@
-# 06 · Ontologia Operacional e Modelo de Objetos
+# 06 — Ontologia operacional e modelo de objetos
 
-**Estado**: canon · Fase 0 (primeira versão)
-**Última atualização**: 2026-04-20
+> Documento canônico do domínio. Toda mudança de modelo deve passar primeiro por este arquivo, depois por migração Prisma, depois por código.
+>
+> **Versão**: 2.0 (post-pivot B2B) · **Data**: 2026-05-10 · ver ADR 0003.
 
-> Este documento é o **contrato canônico do domínio**. Toda tela, API e regra de negócio é uma projeção dele. Mudanças aqui são eventos versionados — nunca feitas sem ADR.
+## 1. Tese de domínio
 
----
+A plataforma é uma **rede de confiança transacional B2B**. O domínio não é catálogo, marketplace ou rede social — é uma camada de infraestrutura onde empresas:
 
-## 1. Princípio ontológico
+1. **Apresentam-se** com perfil verificável (identidade + capacidade + provas).
+2. **Encontram-se** via descoberta filtrada por confiança contextual.
+3. **Negociam** dentro de um deal room auditável com fluxo por modalidade.
+4. **Comprovam** entrega com evidência estruturada e aceite da contraparte.
+5. **Acumulam reputação** derivada de execução real, não de discurso.
 
-O Luma Global Trade Command pensa o mundo como uma rede de **objetos operacionais** conectados. Não há "páginas" no sistema — há objetos e as janelas que os projetam. A ontologia abaixo é o mapa dessa rede.
+Reputação = identidade + prova + execução + comportamento + contexto.
 
-**Metáfora-guia:**
+## 2. Objetos centrais (F0–F4)
 
-- O mundo é o **canvas**.
-- A origem é o **ativo**.
-- O produto é o **passaporte**.
-- O container é a **operação**.
-- A proposta é o **resultado**.
+### 2.1 `User`
+Pessoa física com credencial (Auth.js magic link). Pertence a 0..N empresas via `CompanyMember`.
 
-## 2. Objetos de domínio (canon)
+### 2.2 `Company`
+Empresa transacional. CNPJ único, identidade verificável (`verificationStatus`), localização (F1: PostGIS Point + `serviceRadiusKm`), descrição PT/EN.
 
-### 2.1 Identidade e acesso
-- **User** — conta humana; `role` ∈ {BUYER, STAFF, ADMIN}.
-- **BuyerCompany** — empresa compradora; `type` ∈ {IMPORTER, DISTRIBUTOR, WHOLESALER, RETAIL, INDUSTRY, TRADER}.
-- **Buyer** — vínculo User↔BuyerCompany.
-- **StaffMember** — vínculo User↔time interno; `team` ∈ {COMMERCIAL, OPERATIONS, COMPLIANCE, ADMIN}.
+### 2.3 `CompanyMember`
+Vínculo User ↔ Company com papel (`OWNER | COMMERCIAL | OPERATIONS | FINANCE | BUYER`). Multi-tenant: um User pode pertencer a várias Companies.
 
-### 2.2 Geografia
-- **Country** (`iso2` é a chave).
-- **Port** — porto de destino; `kind` ∈ {SEAPORT, AIRPORT, INLAND}.
-- **OriginRegion** — ex.: "Vale do São Francisco".
-- **Origin** — fazenda própria, parceiro auditado ou unidade agroindustrial; `kind` ∈ {OWN_FARM, AUDITED_PARTNER, AGROINDUSTRIAL_UNIT}.
-- **FieldPlot** — talhão dentro de uma Origin.
-- **PackingHouse**, **ColdChamber**, **LogisticsHub** — infraestrutura associada à Origin.
-- **Route** — ligação Origin → Port, com modalidade.
+### 2.4 `ServiceOffering` (F1)
+Categoria + subcategoria + modalidade (`ONE_OFF | RECURRING | PRODUCT_SUPPLY`) que a Company oferece. Wedge MVP: serviços técnicos B2B locais (climatização, refrigeração, elétrica, manutenção predial, segurança eletrônica, TI para PMEs).
 
-### 2.3 Catálogo
-- **ProductCategory** — ex.: frutas frescas, polpas, agroindustrial seco.
-- **Product** — unidade comercial canônica; tem faixa de temperatura, shelf life e container recomendado.
-- **Variety** — variedade do produto (Palmer, Tommy Atkins, Crimson, Cavendish…); carrega embalagem (caixa, peso, pallet).
+### 2.5 `VerificationArtifact` (F1)
+Documento de verificação (cartão CNPJ, comprovante de endereço). Hash + signed URL + revisor + status. Sem OCR no MVP — revisão manual via admin.
 
-### 2.4 Disponibilidade e campo
-- **Availability** — intersecção (Product × Variety × Origin × janela temporal) com `volumeTonsBand` (faixa, nunca valor exato exposto) e `status` ∈ enum operacional.
-- **HarvestWindow** — janela provável de colheita, com `confidence` ∈ {LOW, MEDIUM, HIGH}.
-- **FieldUpdate** — atualização observacional do campo; `stage` ∈ {PRE_PLANTING..POST_HARVEST}; `riskSummary`, `confidence`.
-- **FieldPhoto** — foto ligada a um FieldUpdate; `approvedForBuyerView` é **a flag-chave** que separa o que o comprador vê do que a Luma vê.
-
-### 2.5 Compliance
-- **DocumentRequirement** — item documental (Commercial Invoice, Phytosanitary Certificate, Temperature Log…).
-- **PhytosanitaryRequirement** — matriz (Product × Country) → lista de DocumentRequirement.
-- **ComplianceGate** — estado do par (Product × Country); `status` ∈ enum de compliance.
-
-### 2.6 Logística
-- **ContainerType** — `code` ∈ {C_20_RF, C_40_RF, C_40_HC_RF, C_20_DR, C_40_DR}; dimensões internas, payload máx., `supportsReefer`, `defaultTempC`.
-- **LoadPlan** — configuração de uma Proposal (1:1 com Proposal).
-- **LoadItem** — item carregado (Product × Variety × quantidades × peso).
-
-### 2.7 Comercial
-- **Proposal** — objeto terminal do comprador; carrega destino, Incoterm e status de ciclo completo.
-- **ProposalNote** — nota comercial; `kind` ∈ {INTERNAL, TO_BUYER}.
-- **AuditEvent** — trilha universal de auditoria de qualquer transição sensível.
-
-## 3. Enums operacionais
-
-### 3.1 AvailabilityStatus
-- `AVAILABLE_NOW`
-- `PRE_RESERVE_OPEN`
-- `UNDER_TECHNICAL_VALIDATION`
-- `LIMITED_AVAILABILITY`
-- `UNDER_CONSULTATION`
-- `NOT_AVAILABLE_FOR_DESTINATION`
-
-### 3.2 ProposalStatus
-`DRAFT` → `SUBMITTED` → `UNDER_COMMERCIAL_REVIEW` → `UNDER_OPERATIONAL_REVIEW` → `DOCUMENTATION_REVIEW_REQUIRED` → `ADJUSTMENT_REQUESTED` → `APPROVED_FOR_NEGOTIATION` → `CONVERTED_TO_OPERATION` | `REJECTED`.
-
-### 3.3 ComplianceGateStatus
-- `PREVIEW_AVAILABLE`
-- `REQUIREMENTS_PENDING`
-- `DOCUMENTATION_REQUIRED`
-- `SUBJECT_TO_FINAL_VALIDATION`
-- `BLOCKED`
-- `CLEARED_INTERNALLY`
-
-### 3.4 ConfidenceLevel
-`LOW` | `MEDIUM` | `HIGH`
-
-### 3.5 FieldStage
-`PRE_PLANTING` · `PLANTED` · `GROWING` · `FLOWERING` · `FRUITING` · `HARVEST` · `POST_HARVEST`
-
-## 4. Relações-chave (mapa narrativo)
+### 2.6 `DealRoom` (F3) — núcleo do MVP
+Sala transacional entre `buyerCompany` e `supplierCompany` com `template` e FSM compartilhada de status:
 
 ```
-Buyer ∈ BuyerCompany ──▶ Country (destino) ──▶ Port
-
-Product × Country ──▶ PhytosanitaryRequirement → [DocumentRequirement]
-Product × Country ──▶ ComplianceGate.status
-
-Product × Variety × Origin × janela ──▶ Availability (volumeTonsBand, status)
-                                    ──▶ HarvestWindow (confidence)
-
-Origin ──▶ FieldPlot ──▶ FieldUpdate ──▶ FieldPhoto (approvedForBuyerView)
-
-Proposal ──▶ LoadPlan ──▶ [LoadItem(Product × Variety × qty)]
-       └──▶ destino (Country, Port)
-       └──▶ ProposalNote, AuditEvent
+OPENED → SCOPED → QUOTED → ACCEPTED → IN_PROGRESS → DELIVERED → CONFIRMED → CLOSED
+                                                              ↘ DISPUTED
+                                                              ↘ CANCELLED
 ```
 
-**Exemplo narrativo** (Rotterdam Mango Reefer Proposal):
+`template` define **forma**, não enum de status. Especificidade por template fica em `scopePayload Json` validado por Zod em `lib/rules/deal-templates/{one-off,recurring,product-supply}.ts`.
 
-```
-Buyer "NorthSea Fresh Importers" ∈ BuyerCompany (Netherlands)
-  → Destination Port: Rotterdam (NL)
-  → Product: Manga / Variety: Palmer
-  → Origin: Fazenda Luma Vale Norte (Vale do São Francisco)
-  → HarvestWindow: Mai/2026 (confidence: HIGH)
-  → Availability: 38t disponíveis + 54t próxima colheita (status: AVAILABLE_NOW)
-  → Container: 40' HC Reefer, temp 10–12 °C
-  → PhytosanitaryRequirement (Mango × NL): 8 documentos
-  → ComplianceGate: PREVIEW_AVAILABLE
-  → Proposal: status UNDER_COMMERCIAL_REVIEW
-```
+### 2.7 `DeliveryCycle` (F3)
+Filho de `DealRoom` template `RECURRING`. Mini-FSM `SCHEDULED → DELIVERED → CONFIRMED`. Deal pai só fecha quando todos os ciclos estão `CONFIRMED` ou `CANCELLED`.
 
-## 5. Regras de exposição por camada
+### 2.8 `Evidence` (F3)
+Prova vinculada ao deal room (e opcionalmente a um cycle). Tipo `PHOTO | DOC | SIGNATURE | INVOICE_PREVIEW`. Tem `uploadedBy` e `acceptedBy?` + `acceptedAt?`. Aceite formal da contraparte é o gatilho de transição para `CONFIRMED`.
 
-| Camada | Vê | Não vê |
-|---|---|---|
-| **Public (buyer)** | `volumeTonsBand`, `status`, `confidence`, fotos aprovadas, compliance preview | Volume exato, identidade completa de parceiros, notas internas |
-| **Internal (staff Luma)** | Tudo da public + volume exato + notas internas + audit trail | Credenciais, chaves de API |
-| **Admin (Luma/Spectre)** | CRUD de todos os objetos, gestão de usuários | — |
+### 2.9 `DealRoomMessage` (F3)
+Chat acoplado ao deal — escopo limitado, sem rich text. Mensagens fora do deal não contam para reputação.
 
-## 6. Invariantes de domínio
+### 2.10 `Review` (F4)
+Gerado **automaticamente** na transição para `CONFIRMED`. Bilateral. Bloqueia review fora desse contexto (guard-rail PRD §13.5). 1–5 + texto opcional + categoria contextual.
 
-- `Availability.volumeTonsBand` é **sempre faixa textual** ("20–40 t"), nunca decimal na camada pública.
-- `FieldPhoto` só aparece em superfícies públicas se `approvedForBuyerView = true` E `approvedByUserId` não-nulo.
-- `ComplianceGate.status` público é limitado a `PREVIEW_AVAILABLE` e `DOCUMENTATION_REQUIRED`; os demais são internos.
-- `Proposal` em status ≠ `DRAFT` não pode alterar `LoadPlan.items` sem gerar `AuditEvent` de tipo ajuste.
-- `ContainerType.code` dry (C_20_DR, C_40_DR) não pode receber LoadItem de Product cujo `recommendedContainerKind` seja reefer, sem alerta explícito.
-- `Product.recommendedContainerKind` frozen não pode coexistir com fresh no mesmo `LoadPlan` sem alerta de revisão.
+### 2.11 `CompanyReputation` (F4 — view materializada)
+Métricas derivadas: `confirmedDealsCount`, `avgRating`, `disputeRate`, `responseTimeP50ms`, `recurringClientsCount`, agrupadas por categoria/ticket band/região. Recalculadas por job. Não é score único — é vetor de sinais para leitura humana.
 
-## 7. Evolução
+### 2.12 `AuditEvent` (todas as fases)
+Trilha polimórfica (`entityType` + `entityId`) usada por DealRoom, Company, Review, Evidence. Toda transição de estado relevante gera um evento.
 
-- Adicionar objeto → ADR + migration Prisma + atualização deste documento.
-- Renomear enum → proibido após F2. Criar novo + migração + deprecar antigo.
-- Remover objeto → apenas após 2 fases sem uso, com ADR.
+## 3. Enums centrais
 
----
+- `VerificationStatus`: `UNVERIFIED | EMAIL_VERIFIED | DOC_VERIFIED`
+- `CompanyMemberRole`: `OWNER | COMMERCIAL | OPERATIONS | FINANCE | BUYER`
+- `DealTemplate`: `ONE_OFF | RECURRING | PRODUCT_SUPPLY`
+- `DealRoomStatus`: `OPENED | SCOPED | QUOTED | ACCEPTED | IN_PROGRESS | DELIVERED | CONFIRMED | CLOSED | DISPUTED | CANCELLED`
+- `EvidenceKind`: `PHOTO | DOC | SIGNATURE | INVOICE_PREVIEW`
+- `DeliveryCycleStatus`: `SCHEDULED | DELIVERED | CONFIRMED | CANCELLED`
 
-**Fonte de verdade técnica**: `prisma/schema.prisma` reflete esta ontologia 1:1. Se houver divergência, este documento é o árbitro; o schema deve ser reconciliado.
+Labels bilíngues: `lib/status/enums.ts`. Strings livres de status são proibidas.
+
+## 4. Princípios
+
+- Reputação só nasce de `DealRoom.status = CONFIRMED` com evidência aceita pela contraparte.
+- Sem score único opaco — sempre decomposto em sinais.
+- Reviews vinculados a deal real, não a perfil.
+- Auditabilidade: toda mudança de estado em DealRoom/Company/Review gera `AuditEvent`.
+- Visibilidade controlada: nem todo dado é público (PII criptografada via pgcrypto).
+- Plataforma sinaliza evidência e comportamento; **não** afirma garantia de qualidade.
+
+## 5. Fora de escopo do MVP
+
+- Escrow / pagamento integrado.
+- Cláusulas jurídicas parametrizadas.
+- Score financeiro / análise de crédito.
+- Mediação automática de disputa.
+- ERP, fiscal, BL/Invoice oficiais.
+- Trust graph (relacionamento entre empresas além do deal).
+- Onboarding fora do wedge (serviços técnicos B2B locais).
+
+Ver ADR 0003 para a tese do pivot e ADR 0004 (futuro) para a estratégia de mitigação de gaming reputacional.

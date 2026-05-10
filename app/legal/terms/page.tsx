@@ -63,7 +63,7 @@ export default function TermsPage() {
 
       <h2>6. Limitação de responsabilidade</h2>
       <p>
-        A Luma fornece a plataforma "como está". Não nos responsabilizamos por
+        A plataforma é fornecida &ldquo;como está&rdquo;. Não nos responsabilizamos por
         decisões comerciais tomadas com base em previsões operacionais. Datas
         de entrega são janelas estimadas, não garantias.
       </p>
