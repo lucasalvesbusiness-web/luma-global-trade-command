@@ -251,7 +251,11 @@ export function CityMap({ self, companies, pitch = 60, className }: Props) {
 
   return (
     <>
-      <div ref={containerRef} className={className ?? 'absolute inset-0'} />
+      <div
+        ref={containerRef}
+        className={className ?? 'h-full w-full'}
+        style={{ minHeight: '320px' }}
+      />
       {popupCompany && popupContainer && (
         <CompanyPopup
           company={popupCompany}

@@ -59,7 +59,7 @@ export function HomeClient() {
   return (
     <div className="relative h-[calc(100vh-64px)] w-full overflow-hidden md:h-screen">
       {/* Map fills the viewport behind everything else. */}
-      <div className="absolute inset-0">
+      <div className="absolute inset-0 h-full w-full">
         <CityMapLazy self={self} companies={companies} />
       </div>
 
