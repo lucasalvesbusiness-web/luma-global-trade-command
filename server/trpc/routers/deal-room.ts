@@ -6,6 +6,8 @@ import {
   canActorPerform,
   findTransition,
 } from '@/server/services/deal-room-transitions';
+import { notifyDealTransition } from '@/server/services/deal-notifications';
+import { ensureCyclesForAcceptedRecurring } from '@/server/services/delivery-cycles';
 import { ensureReviewsForConfirmedDeal } from '@/server/services/reputation';
 import { protectedProcedure, router } from '@/server/trpc/trpc';
 
@@ -69,7 +71,7 @@ export const dealRoomRouter = router({
       }
       const scope = parseScope(input.template, input.scopePayload);
 
-      return ctx.repositories.dealRoom.create({
+      const created = await ctx.repositories.dealRoom.create({
         buyerCompanyId: ctx.user.companyId,
         supplierCompanyId: supplier.id,
         template: input.template,
@@ -77,6 +79,8 @@ export const dealRoomRouter = router({
         scopePayload: scope,
         actorUserId: ctx.user.id,
       });
+      await notifyDealTransition({ dealRoomId: created.id, to: 'OPENED' });
+      return created;
     }),
 
   byId: protectedProcedure
@@ -163,9 +167,14 @@ export const dealRoomRouter = router({
         patch: input.patch,
       });
 
+      if (input.to === 'ACCEPTED') {
+        await ensureCyclesForAcceptedRecurring(input.id);
+      }
       if (input.to === 'CONFIRMED') {
         await ensureReviewsForConfirmedDeal(input.id);
       }
+
+      await notifyDealTransition({ dealRoomId: input.id, to: input.to });
 
       return updated;
     }),

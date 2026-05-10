@@ -10,13 +10,28 @@ import { dealTemplateLabels } from '@/lib/status/enums';
 
 type DealRow = DealRoomWithRelations & { viewerRole: 'BUYER' | 'SUPPLIER' };
 
-export function DealListClient({ deals }: { deals: DealRow[] }) {
+export function DealListClient({
+  deals,
+  pendingReviewsCount,
+}: {
+  deals: DealRow[];
+  pendingReviewsCount: number;
+}) {
   return (
     <main className="mx-auto max-w-5xl px-6 py-12">
       <header className="mb-6">
         <p className="text-xs uppercase tracking-wider text-luma-ink/50">Deal rooms</p>
         <h1 className="font-display text-2xl">Seus negócios</h1>
       </header>
+
+      {pendingReviewsCount > 0 && (
+        <Link
+          href="/reviews/pending"
+          className="mb-4 block rounded-lg border border-luma-olive/40 bg-luma-olive/10 px-4 py-3 text-sm transition-colors hover:bg-luma-olive/15"
+        >
+          <span className="font-medium">{pendingReviewsCount}</span> avaliação(ões) pendente(s) →
+        </Link>
+      )}
 
       {deals.length === 0 ? (
         <p className="rounded-lg border border-dashed border-luma-ink/15 p-8 text-center text-sm text-luma-ink/60">

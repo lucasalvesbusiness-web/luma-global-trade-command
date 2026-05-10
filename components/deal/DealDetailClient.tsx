@@ -120,6 +120,44 @@ export function DealDetailClient({
             </CardContent>
           </Card>
 
+          {deal.cycles.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Ciclos de entrega ({deal.cycles.length})</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="flex flex-col gap-2 text-sm">
+                  {deal.cycles.map((cy) => (
+                    <li
+                      key={cy.id}
+                      className="flex items-center justify-between rounded-md border border-luma-ink/10 px-3 py-2"
+                    >
+                      <span>
+                        Ciclo #{cy.ordinal}
+                        {cy.scheduledAt && (
+                          <span className="ml-2 text-xs text-luma-ink/50">
+                            previsto {new Date(cy.scheduledAt).toLocaleDateString('pt-BR')}
+                          </span>
+                        )}
+                      </span>
+                      <Badge
+                        variant={
+                          cy.status === 'CONFIRMED'
+                            ? 'verified'
+                            : cy.status === 'CANCELLED'
+                              ? 'muted'
+                              : 'outline'
+                        }
+                      >
+                        {cy.status}
+                      </Badge>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          )}
+
           <Card>
             <CardHeader>
               <CardTitle>Evidências ({deal.evidences.length})</CardTitle>

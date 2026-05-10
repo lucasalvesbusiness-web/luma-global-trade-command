@@ -2,6 +2,7 @@ import type {
   DealRoom,
   DealRoomStatus,
   DealTemplate,
+  DeliveryCycle,
   Evidence,
   EvidenceKind,
   PrismaClient,
@@ -11,6 +12,7 @@ export type DealRoomWithRelations = DealRoom & {
   buyerCompany: { id: string; slug: string; legalName: string; tradeName: string | null };
   supplierCompany: { id: string; slug: string; legalName: string; tradeName: string | null };
   evidences: Evidence[];
+  cycles: DeliveryCycle[];
 };
 
 export function createPrismaDealRoomRepository(db: PrismaClient) {
@@ -180,4 +182,5 @@ const companyRelations = {
   buyerCompany: { select: { id: true, slug: true, legalName: true, tradeName: true } },
   supplierCompany: { select: { id: true, slug: true, legalName: true, tradeName: true } },
   evidences: { orderBy: { createdAt: 'asc' as const } },
+  cycles: { orderBy: { ordinal: 'asc' as const } },
 };
