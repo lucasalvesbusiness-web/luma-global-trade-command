@@ -6,6 +6,7 @@ import {
   canActorPerform,
   findTransition,
 } from '@/server/services/deal-room-transitions';
+import { ensureReviewsForConfirmedDeal } from '@/server/services/reputation';
 import { protectedProcedure, router } from '@/server/trpc/trpc';
 
 const dealTemplateSchema = z.enum(['ONE_OFF', 'RECURRING', 'PRODUCT_SUPPLY']);
@@ -153,7 +154,7 @@ export const dealRoomRouter = router({
         }
       }
 
-      return ctx.repositories.dealRoom.transition({
+      const updated = await ctx.repositories.dealRoom.transition({
         dealRoomId: input.id,
         from: fromStatus,
         to: input.to,
@@ -161,6 +162,12 @@ export const dealRoomRouter = router({
         actorUserId: ctx.user.id,
         patch: input.patch,
       });
+
+      if (input.to === 'CONFIRMED') {
+        await ensureReviewsForConfirmedDeal(input.id);
+      }
+
+      return updated;
     }),
 
   attachEvidence: protectedProcedure

@@ -57,6 +57,23 @@ export function CompanyCard({ company }: { company: DiscoveryResult }) {
           )}
         </div>
       )}
+
+      {(company.confirmedDealsCount > 0 || company.avgRating !== null) && (
+        <div className="mt-3 flex items-center gap-3 text-xs text-luma-ink/60">
+          {company.confirmedDealsCount > 0 && (
+            <span>
+              <strong className="text-luma-ink/80">{company.confirmedDealsCount}</strong>{' '}
+              negócio{company.confirmedDealsCount !== 1 ? 's' : ''} concluído
+              {company.confirmedDealsCount !== 1 ? 's' : ''}
+            </span>
+          )}
+          {company.avgRating !== null && (
+            <span>
+              ★ <strong className="text-luma-ink/80">{company.avgRating.toFixed(1)}</strong>
+            </span>
+          )}
+        </div>
+      )}
     </Link>
   );
 }

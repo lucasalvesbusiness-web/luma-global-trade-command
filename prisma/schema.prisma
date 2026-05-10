@@ -121,6 +121,8 @@ model Company {
   artifacts    VerificationArtifact[]
   dealsAsBuyer    DealRoom[] @relation("DealRoomBuyer")
   dealsAsSupplier DealRoom[] @relation("DealRoomSupplier")
+  reviewsGiven    Review[]   @relation("ReviewRater")
+  reviewsReceived Review[]   @relation("ReviewRated")
 }
 
 model CompanyMember {
@@ -298,6 +300,29 @@ model DealRoomMessage {
   author   User     @relation(fields: [authorId], references: [id])
 
   @@index([dealRoomId])
+}
+
+// ─────────────────────────────────────────────────────────
+// Review (F4) — bilateral, auto-created on DealRoom CONFIRMED
+// ─────────────────────────────────────────────────────────
+
+model Review {
+  id              String   @id @default(cuid())
+  dealRoomId      String
+  raterCompanyId  String
+  ratedCompanyId  String
+  rating          Int?     // 1-5; null until rater completes
+  comment         String?  @db.Text
+  category        String?  // contextual category (from supplier's offerings)
+  submittedAt     DateTime?
+  createdAt       DateTime @default(now())
+
+  raterCompany Company @relation("ReviewRater", fields: [raterCompanyId], references: [id])
+  ratedCompany Company @relation("ReviewRated", fields: [ratedCompanyId], references: [id])
+
+  @@unique([dealRoomId, raterCompanyId])
+  @@index([ratedCompanyId])
+  @@index([raterCompanyId])
 }
 
 // ─────────────────────────────────────────────────────────

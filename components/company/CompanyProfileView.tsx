@@ -1,22 +1,26 @@
 import Link from 'next/link';
 
 import type { CompanyWithRelations } from '@/server/repositories/interfaces';
+import type { ReputationSignals } from '@/server/services/reputation';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { StatusChip } from '@/components/ui/StatusChip';
 import { CompanyMapLazy } from '@/components/canvas/CompanyMapLazy';
 import { OpenDealDialog } from '@/components/deal/OpenDealDialog';
+import { ReputationBadge } from '@/components/company/ReputationBadge';
 import { dealTemplateLabels } from '@/lib/status/enums';
 
 export function CompanyProfileView({
   company,
   isOwner,
   canOpenDeal,
+  reputation,
 }: {
   company: CompanyWithRelations;
   isOwner: boolean;
   canOpenDeal: boolean;
+  reputation: ReputationSignals;
 }) {
   const lat = company.latitude ? Number(company.latitude) : null;
   const lng = company.longitude ? Number(company.longitude) : null;
@@ -108,7 +112,8 @@ export function CompanyProfileView({
           </Card>
         </div>
 
-        <div className="lg:col-span-1">
+        <div className="flex flex-col gap-6 lg:col-span-1">
+          <ReputationBadge signals={reputation} />
           <Card>
             <CardHeader>
               <CardTitle>Localização e cobertura</CardTitle>

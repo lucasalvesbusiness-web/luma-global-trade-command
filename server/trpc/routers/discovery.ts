@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import { db } from '@/lib/db';
+import { computeReputation } from '@/server/services/reputation';
 import { publicProcedure, router } from '@/server/trpc/trpc';
 
 const verificationOrder: Record<string, number> = {
@@ -35,6 +36,8 @@ export type DiscoveryResult = {
   distanceKm: number | null;
   categories: string[];
   modalities: string[];
+  confirmedDealsCount: number;
+  avgRating: number | null;
 };
 
 export const discoveryRouter = router({
@@ -108,32 +111,50 @@ export const discoveryRouter = router({
           return true;
         });
 
-      filtered.sort((a, b) => {
+      // Hydrate reputation in parallel for the candidate set (capped to limit*2
+      // pre-sort to avoid extra computation).
+      const candidates = filtered.slice(0, limit * 2);
+      const reputations = await Promise.all(
+        candidates.map(({ c }) => computeReputation(c.id)),
+      );
+      const enriched = candidates.map((row, idx) => ({
+        ...row,
+        reputation: reputations[idx]!,
+      }));
+
+      enriched.sort((a, b) => {
         const va = verificationOrder[a.c.verificationStatus] ?? 0;
         const vb = verificationOrder[b.c.verificationStatus] ?? 0;
         if (va !== vb) return vb - va; // higher verification first
+        if (a.reputation.confirmedDealsCount !== b.reputation.confirmedDealsCount) {
+          return b.reputation.confirmedDealsCount - a.reputation.confirmedDealsCount;
+        }
         if (a.distanceKm !== null && b.distanceKm !== null) {
           return a.distanceKm - b.distanceKm;
         }
         return a.c.legalName.localeCompare(b.c.legalName);
       });
 
-      return filtered.slice(0, limit).map<DiscoveryResult>(({ c, lat, lng, distanceKm }) => ({
-        id: c.id,
-        slug: c.slug,
-        legalName: c.legalName,
-        tradeName: c.tradeName,
-        description: c.description,
-        city: c.city,
-        state: c.state,
-        latitude: lat,
-        longitude: lng,
-        serviceRadiusKm: c.serviceRadiusKm,
-        verificationStatus: c.verificationStatus,
-        distanceKm: distanceKm !== null ? Math.round(distanceKm * 10) / 10 : null,
-        categories: Array.from(new Set(c.offerings.map((o) => o.category))),
-        modalities: Array.from(new Set(c.offerings.map((o) => o.modality))),
-      }));
+      return enriched
+        .slice(0, limit)
+        .map<DiscoveryResult>(({ c, lat, lng, distanceKm, reputation }) => ({
+          id: c.id,
+          slug: c.slug,
+          legalName: c.legalName,
+          tradeName: c.tradeName,
+          description: c.description,
+          city: c.city,
+          state: c.state,
+          latitude: lat,
+          longitude: lng,
+          serviceRadiusKm: c.serviceRadiusKm,
+          verificationStatus: c.verificationStatus,
+          distanceKm: distanceKm !== null ? Math.round(distanceKm * 10) / 10 : null,
+          categories: Array.from(new Set(c.offerings.map((o) => o.category))),
+          modalities: Array.from(new Set(c.offerings.map((o) => o.modality))),
+          confirmedDealsCount: reputation.confirmedDealsCount,
+          avgRating: reputation.avgRating,
+        }));
     }),
 });
 
