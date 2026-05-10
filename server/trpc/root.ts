@@ -1,10 +1,12 @@
 import { router } from '@/server/trpc/trpc';
 import { companyRouter } from '@/server/trpc/routers/company';
+import { dealRoomRouter } from '@/server/trpc/routers/deal-room';
 import { discoveryRouter } from '@/server/trpc/routers/discovery';
 import { verificationRouter } from '@/server/trpc/routers/verification';
 
 export const appRouter = router({
   company: companyRouter,
+  dealRoom: dealRoomRouter,
   discovery: discoveryRouter,
   verification: verificationRouter,
 });

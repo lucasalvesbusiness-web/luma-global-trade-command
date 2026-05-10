@@ -15,6 +15,12 @@ export default async function CompanyProfilePage({
 
   const session = await auth();
   const isOwner = session?.user?.companyId === company.id && session.user.companyRole === 'OWNER';
+  const canOpenDeal =
+    !!session?.user?.companyId &&
+    session.user.companyId !== company.id &&
+    company.offerings.length > 0;
 
-  return <CompanyProfileView company={company} isOwner={isOwner} />;
+  return (
+    <CompanyProfileView company={company} isOwner={isOwner} canOpenDeal={canOpenDeal} />
+  );
 }

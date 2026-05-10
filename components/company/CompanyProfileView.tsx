@@ -6,14 +6,17 @@ import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { StatusChip } from '@/components/ui/StatusChip';
 import { CompanyMapLazy } from '@/components/canvas/CompanyMapLazy';
+import { OpenDealDialog } from '@/components/deal/OpenDealDialog';
 import { dealTemplateLabels } from '@/lib/status/enums';
 
 export function CompanyProfileView({
   company,
   isOwner,
+  canOpenDeal,
 }: {
   company: CompanyWithRelations;
   isOwner: boolean;
+  canOpenDeal: boolean;
 }) {
   const lat = company.latitude ? Number(company.latitude) : null;
   const lng = company.longitude ? Number(company.longitude) : null;
@@ -49,6 +52,20 @@ export function CompanyProfileView({
           </Button>
         )}
       </div>
+
+      {canOpenDeal && (
+        <div className="mb-6">
+          <OpenDealDialog
+            supplierSlug={company.slug}
+            supplierName={company.tradeName ?? company.legalName}
+            availableModalities={
+              Array.from(new Set(company.offerings.map((o) => o.modality))) as Array<
+                'ONE_OFF' | 'RECURRING' | 'PRODUCT_SUPPLY'
+              >
+            }
+          />
+        </div>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2 flex flex-col gap-6">

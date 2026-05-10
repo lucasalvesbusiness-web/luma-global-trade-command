@@ -25,11 +25,14 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  accounts        Account[]
-  sessions        Session[]
-  companyMembers  CompanyMember[]
+  accounts          Account[]
+  sessions          Session[]
+  companyMembers    CompanyMember[]
   artifactsUploaded VerificationArtifact[] @relation("ArtifactUploader")
   artifactsReviewed VerificationArtifact[] @relation("ArtifactReviewer")
+  evidencesUploaded Evidence[]             @relation("EvidenceUploader")
+  evidencesAccepted Evidence[]             @relation("EvidenceAcceptor")
+  messagesSent      DealRoomMessage[]
 }
 
 enum UserRole {
@@ -116,6 +119,8 @@ model Company {
   members      CompanyMember[]
   offerings    ServiceOffering[]
   artifacts    VerificationArtifact[]
+  dealsAsBuyer    DealRoom[] @relation("DealRoomBuyer")
+  dealsAsSupplier DealRoom[] @relation("DealRoomSupplier")
 }
 
 model CompanyMember {
@@ -178,6 +183,121 @@ model VerificationArtifact {
 
   @@index([companyId])
   @@index([status])
+}
+
+// ─────────────────────────────────────────────────────────
+// DealRoom — transactional core (F3)
+// ─────────────────────────────────────────────────────────
+
+enum DealRoomStatus {
+  OPENED
+  SCOPED
+  QUOTED
+  ACCEPTED
+  IN_PROGRESS
+  DELIVERED
+  CONFIRMED
+  CLOSED
+  DISPUTED
+  CANCELLED
+}
+
+enum DeliveryCycleStatus {
+  SCHEDULED
+  DELIVERED
+  CONFIRMED
+  CANCELLED
+}
+
+enum EvidenceKind {
+  PHOTO
+  DOC
+  SIGNATURE
+  INVOICE_PREVIEW
+}
+
+model DealRoom {
+  id              String         @id @default(cuid())
+  buyerCompanyId  String
+  supplierCompanyId String
+  template        DealTemplate
+  status          DealRoomStatus @default(OPENED)
+  title           String
+  scopePayload    Json?
+  // Quote (in cents to avoid float). Null until QUOTED.
+  quoteCents      Int?
+  quoteCurrency   String?        @default("BRL")
+  openedAt        DateTime       @default(now())
+  acceptedAt      DateTime?
+  deliveredAt     DateTime?
+  confirmedAt     DateTime?
+  closedAt        DateTime?
+  disputedAt      DateTime?
+  cancelledAt     DateTime?
+  updatedAt       DateTime       @updatedAt
+
+  buyerCompany    Company           @relation("DealRoomBuyer", fields: [buyerCompanyId], references: [id])
+  supplierCompany Company           @relation("DealRoomSupplier", fields: [supplierCompanyId], references: [id])
+  cycles          DeliveryCycle[]
+  evidences       Evidence[]
+  messages        DealRoomMessage[]
+
+  @@index([buyerCompanyId])
+  @@index([supplierCompanyId])
+  @@index([status])
+}
+
+model DeliveryCycle {
+  id          String              @id @default(cuid())
+  dealRoomId  String
+  // 1-based ordinal; for monthly RECURRING this is "month #1, #2, ..."
+  ordinal     Int
+  status      DeliveryCycleStatus @default(SCHEDULED)
+  scheduledAt DateTime?
+  deliveredAt DateTime?
+  confirmedAt DateTime?
+  notes       String?             @db.Text
+  createdAt   DateTime            @default(now())
+
+  dealRoom  DealRoom   @relation(fields: [dealRoomId], references: [id], onDelete: Cascade)
+  evidences Evidence[]
+
+  @@unique([dealRoomId, ordinal])
+  @@index([dealRoomId])
+}
+
+model Evidence {
+  id            String       @id @default(cuid())
+  dealRoomId    String
+  cycleId       String?
+  kind          EvidenceKind
+  url           String
+  caption       String?      @db.Text
+  uploadedById  String
+  acceptedById  String?
+  acceptedAt    DateTime?
+  createdAt     DateTime     @default(now())
+
+  dealRoom   DealRoom       @relation(fields: [dealRoomId], references: [id], onDelete: Cascade)
+  cycle      DeliveryCycle? @relation(fields: [cycleId], references: [id], onDelete: SetNull)
+  uploadedBy User           @relation("EvidenceUploader", fields: [uploadedById], references: [id])
+  acceptedBy User?          @relation("EvidenceAcceptor", fields: [acceptedById], references: [id])
+
+  @@index([dealRoomId])
+  @@index([cycleId])
+}
+
+model DealRoomMessage {
+  id         String   @id @default(cuid())
+  dealRoomId String
+  authorId   String
+  body       String   @db.Text
+  createdAt  DateTime @default(now())
+
+  dealRoom DealRoom @relation(fields: [dealRoomId], references: [id], onDelete: Cascade)
+  author   User     @relation(fields: [authorId], references: [id])
+
+  @@index([dealRoomId])
 }
 
 // ─────────────────────────────────────────────────────────
