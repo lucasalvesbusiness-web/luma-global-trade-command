@@ -107,6 +107,44 @@ model Company {
   dealsAsSupplier DealRoom[]             @relation("DealRoomSupplier")
   reviewsGiven    Review[]               @relation("ReviewRater")
   reviewsReceived Review[]               @relation("ReviewRated")
+  watchesGiven    CompanyWatch[]         @relation("WatchWatcher")
+  watchesReceived CompanyWatch[]         @relation("WatchWatched")
+  activityActed   ActivityEvent[]        @relation("ActivityActor")
+  activityAbout   ActivityEvent[]        @relation("ActivitySubject")
+}
+
+model CompanyWatch {
+  id                String   @id @default(cuid())
+  watcherCompanyId  String
+  watchedCompanyId  String
+  createdAt         DateTime @default(now())
+
+  watcher Company @relation("WatchWatcher", fields: [watcherCompanyId], references: [id], onDelete: Cascade)
+  watched Company @relation("WatchWatched", fields: [watchedCompanyId], references: [id], onDelete: Cascade)
+
+  @@unique([watcherCompanyId, watchedCompanyId])
+  @@index([watchedCompanyId])
+}
+
+// Public-facing activity feed (distinct from AuditEvent which is
+// internal forensic trail).
+model ActivityEvent {
+  id               String   @id @default(cuid())
+  // DEAL_CONFIRMED | COMPANY_VERIFIED | COMPANY_JOINED
+  type             String
+  actorCompanyId   String
+  subjectCompanyId String?
+  dealRoomId       String?
+  // PUBLIC | NETWORK | PRIVATE
+  visibility       String   @default("PUBLIC")
+  metadata         Json?
+  createdAt        DateTime @default(now())
+
+  actorCompany   Company  @relation("ActivityActor", fields: [actorCompanyId], references: [id], onDelete: Cascade)
+  subjectCompany Company? @relation("ActivitySubject", fields: [subjectCompanyId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([actorCompanyId, createdAt])
 }
 
 model CompanyMember {

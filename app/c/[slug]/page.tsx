@@ -50,6 +50,8 @@ export default async function CompanyProfilePage({
     !!session?.user?.companyId &&
     session.user.companyId !== company.id &&
     company.offerings.length > 0;
+  const canWatch =
+    !!session?.user?.companyId && session.user.companyId !== company.id;
 
   const counterMap = new Map<string, Counterparty>();
   const dealHistory: DealHistoryRow[] = [];
@@ -87,6 +89,7 @@ export default async function CompanyProfilePage({
       company={company}
       isOwner={isOwner}
       canOpenDeal={canOpenDeal}
+      canWatch={canWatch}
       reputation={reputation}
       counterparties={counterparties}
       dealHistory={dealHistory}

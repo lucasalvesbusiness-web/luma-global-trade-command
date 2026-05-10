@@ -5,11 +5,11 @@ import { auth } from '@/server/auth/config';
 import { db } from '@/lib/db';
 import type { CompanyMemberRole } from '@/lib/types/enums';
 import { repositories } from '@/server/repositories';
+import { ActivityFeed } from '@/components/inbox/ActivityFeed';
 import { Button } from '@/components/ui/Button';
 import { Reveal } from '@/components/ui/Reveal';
 import { StatusChip } from '@/components/ui/StatusChip';
 import { TechLabel } from '@/components/ui/TechLabel';
-import { dealRoomStatusLabels } from '@/lib/status/enums';
 
 export default async function InboxPage() {
   const session = await auth();
@@ -18,7 +18,7 @@ export default async function InboxPage() {
 
   const companyId = session.user.companyId;
 
-  const [pendingReviews, deals, recentEvents] = await Promise.all([
+  const [pendingReviews, deals] = await Promise.all([
     db.review.findMany({
       where: { raterCompanyId: companyId, submittedAt: null },
       include: {
@@ -27,11 +27,6 @@ export default async function InboxPage() {
       orderBy: { createdAt: 'desc' },
     }),
     repositories.dealRoom.listForCompany(companyId),
-    db.auditEvent.findMany({
-      where: { entityType: 'DealRoom' },
-      orderBy: { createdAt: 'desc' },
-      take: 8,
-    }),
   ]);
 
   // Deals waiting on you
@@ -108,26 +103,9 @@ export default async function InboxPage() {
         </div>
 
         <div className="space-y-8">
-          {/* Activity */}
-          <Section code="§02" title="Atividade recente" count={recentEvents.length}>
-            <ul className="font-mono text-[11px] leading-relaxed text-ink-400">
-              {recentEvents.map((e) => (
-                <li key={e.id} className="border-b border-white/[0.04] py-2">
-                  <div className="text-ink-500">
-                    {new Date(e.createdAt).toLocaleString('pt-BR')}
-                  </div>
-                  <div>
-                    <span className="text-ink-200">{e.action}</span>
-                    {e.fromStatus && e.toStatus && (
-                      <span className="ml-2 text-ink-400">
-                        {e.fromStatus} → {e.toStatus}
-                      </span>
-                    )}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </Section>
+          <Reveal>
+            <ActivityFeed />
+          </Reveal>
 
           <Reveal>
             <div className="rounded-md border border-white/[0.07] bg-ink-850/60 p-6">

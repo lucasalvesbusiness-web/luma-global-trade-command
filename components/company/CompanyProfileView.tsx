@@ -12,6 +12,7 @@ import { ProfileNetworkCanvas } from '@/components/canvas/ProfileNetworkCanvas';
 import { PublicNav } from '@/components/system/PublicNav';
 import { StatusChip } from '@/components/ui/StatusChip';
 import { TechLabel } from '@/components/ui/TechLabel';
+import { WatchButton } from '@/components/company/WatchButton';
 import { dealTemplateLabels } from '@/lib/status/enums';
 
 type DealHistoryRow = {
@@ -44,6 +45,7 @@ export function CompanyProfileView({
   company,
   isOwner,
   canOpenDeal,
+  canWatch,
   reputation,
   counterparties,
   dealHistory,
@@ -52,6 +54,7 @@ export function CompanyProfileView({
   company: CompanyWithRelations;
   isOwner: boolean;
   canOpenDeal: boolean;
+  canWatch: boolean;
   reputation: ReputationSignals;
   counterparties: Counterparty[];
   dealHistory: DealHistoryRow[];
@@ -120,6 +123,7 @@ export function CompanyProfileView({
                     <Link href="/c/edit">Editar</Link>
                   </Button>
                 )}
+                {canWatch && <WatchButton targetCompanyId={company.id} />}
                 {canOpenDeal && (
                   <OpenDealDialog
                     supplierSlug={company.slug}

@@ -1,6 +1,7 @@
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 
+import { emitCompanyVerified } from '@/server/services/activity-emitter';
 import {
   adminProcedure,
   ownerProcedure,
@@ -55,6 +56,7 @@ export const verificationRouter = router({
           artifact.companyId,
           'DOC_VERIFIED',
         );
+        await emitCompanyVerified(artifact.companyId);
       }
 
       return updated;

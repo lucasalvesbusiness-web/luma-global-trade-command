@@ -1,6 +1,7 @@
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 
+import { emitCompanyJoined } from '@/server/services/activity-emitter';
 import {
   adminProcedure,
   ownerProcedure,
@@ -56,10 +57,12 @@ export const companyRouter = router({
           message: 'CNPJ já cadastrado',
         });
       }
-      return ctx.repositories.company.create({
+      const created = await ctx.repositories.company.create({
         ...input,
         ownerUserId: ctx.user.id,
       });
+      await emitCompanyJoined(created.id);
+      return created;
     }),
 
   updateMine: ownerProcedure
