@@ -12,6 +12,7 @@ import { TechLabel } from '@/components/ui/TechLabel';
 import { Textarea } from '@/components/ui/Textarea';
 import { trpc } from '@/lib/trpc/react';
 import { cn } from '@/lib/utils';
+import { TeamSection } from './TeamSection';
 
 type Section = 'identity' | 'location' | 'description' | 'offerings' | 'verification' | 'team';
 
@@ -21,7 +22,7 @@ const SECTIONS: Array<{ id: Section; code: string; label: string; available: boo
   { id: 'description', code: '02', label: 'Descrição', available: true },
   { id: 'offerings', code: '03', label: 'Ofertas', available: false },
   { id: 'verification', code: '04', label: 'Verificação', available: true },
-  { id: 'team', code: '05', label: 'Equipe', available: false },
+  { id: 'team', code: '05', label: 'Equipe', available: true },
 ];
 
 export function CompanyEditClient({
@@ -304,6 +305,8 @@ export function CompanyEditClient({
               </div>
             </SectionWrap>
           )}
+
+          {active === 'team' && <TeamSection />}
         </div>
       </div>
     </main>
