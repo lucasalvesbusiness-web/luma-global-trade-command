@@ -119,10 +119,15 @@ export function CityMap({ self, companies, pitch = 60, className }: Props) {
 
     return () => {
       popupRef.current?.remove();
+      popupRef.current = null;
       map.remove();
       mapRef.current = null;
+      for (const m of markersRef.current.values()) m.remove();
       markersRef.current.clear();
+      selfMarkerRef.current?.remove();
       selfMarkerRef.current = null;
+      // Defensive: clear any leftover DOM so HMR re-init doesn't warn.
+      if (containerRef.current) containerRef.current.innerHTML = '';
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

@@ -70,6 +70,7 @@ export default async function RootLayout({
     <html
       lang={locale}
       className={`${display.variable} ${sans.variable} ${mono.variable} dark`}
+      data-scroll-behavior="smooth"
     >
       <body className="bg-spectre-carbon text-ink-100 font-sans antialiased">
         <NextIntlClientProvider locale={locale} messages={messages}>
