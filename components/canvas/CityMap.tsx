@@ -40,6 +40,10 @@ export function CityMap({ self, companies, pitch = 60, className }: Props) {
 
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+    // Defensive: ensure container is empty before Mapbox claims it.
+    // Strict mode double-invoke + HMR can leave stale DOM otherwise.
+    containerRef.current.innerHTML = '';
+
     mapboxgl.accessToken = TOKEN;
     const map = new mapboxgl.Map({
       container: containerRef.current,
