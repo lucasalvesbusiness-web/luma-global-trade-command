@@ -12,6 +12,7 @@ import { ProfileNetworkCanvas } from '@/components/canvas/ProfileNetworkCanvas';
 import { PublicNav } from '@/components/system/PublicNav';
 import { StatusChip } from '@/components/ui/StatusChip';
 import { TechLabel } from '@/components/ui/TechLabel';
+import { VerificationCeremony } from '@/components/company/VerificationCeremony';
 import { WatchButton } from '@/components/company/WatchButton';
 import { dealTemplateLabels } from '@/lib/status/enums';
 
@@ -67,9 +68,12 @@ export function CompanyProfileView({
   const ratingDisplay =
     reputation.avgRating !== null ? reputation.avgRating.toFixed(1) : '—';
 
+  const ceremonyEnabled = isOwner && company.verificationStatus === 'DOC_VERIFIED';
+
   return (
     <>
       {!isAuthenticated && <PublicNav />}
+      <VerificationCeremony companyId={company.id} enabled={ceremonyEnabled} />
       <main className="relative">
         {/* HERO */}
         <section className="relative isolate overflow-hidden">
