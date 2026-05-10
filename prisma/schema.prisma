@@ -1,6 +1,6 @@
 // B2B Trust Network — pivot baseline schema
 // Canonical reference: docs/06-operational-ontology-and-object-model.md
-// Phase F0: identity + audit + Company stub. F1+ expands DealRoom, Evidence, Review, Reputation.
+// F1: Company expanded with location, ServiceOffering, VerificationArtifact.
 
 generator client {
   provider = "prisma-client-js"
@@ -21,12 +21,20 @@ model User {
   email         String    @unique
   emailVerified DateTime?
   image         String?
+  role          UserRole  @default(MEMBER)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
   accounts        Account[]
   sessions        Session[]
   companyMembers  CompanyMember[]
+  artifactsUploaded VerificationArtifact[] @relation("ArtifactUploader")
+  artifactsReviewed VerificationArtifact[] @relation("ArtifactReviewer")
+}
+
+enum UserRole {
+  MEMBER
+  ADMIN
 }
 
 model Account {
@@ -65,7 +73,7 @@ model VerificationToken {
 }
 
 // ─────────────────────────────────────────────────────────
-// Company (stub — F1 expands with location, verification artifacts, service offerings)
+// Company
 // ─────────────────────────────────────────────────────────
 
 enum VerificationStatus {
@@ -82,18 +90,32 @@ enum CompanyMemberRole {
   BUYER
 }
 
+enum DealTemplate {
+  ONE_OFF
+  RECURRING
+  PRODUCT_SUPPLY
+}
+
 model Company {
   id                 String             @id @default(cuid())
   slug               String             @unique
   legalName          String
   tradeName          String?
-  taxId              String             @unique // CNPJ
+  taxId              String             @unique // CNPJ (digits only)
   description        String?            @db.Text
+  city               String?
+  state              String?
+  // Location stored as Decimal pair; PostGIS Point materialized via SQL view in F2.
+  latitude           Decimal?           @db.Decimal(9, 6)
+  longitude          Decimal?           @db.Decimal(9, 6)
+  serviceRadiusKm    Int?
   verificationStatus VerificationStatus @default(UNVERIFIED)
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
 
-  members CompanyMember[]
+  members      CompanyMember[]
+  offerings    ServiceOffering[]
+  artifacts    VerificationArtifact[]
 }
 
 model CompanyMember {
@@ -108,6 +130,54 @@ model CompanyMember {
 
   @@unique([userId, companyId])
   @@index([companyId])
+}
+
+model ServiceOffering {
+  id          String       @id @default(cuid())
+  companyId   String
+  category    String       // e.g. "refrigeração", "elétrica", "TI"
+  subcategory String?
+  modality    DealTemplate
+  description String?      @db.Text
+  createdAt   DateTime     @default(now())
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+  @@index([category])
+}
+
+enum VerificationArtifactKind {
+  TAX_ID_CARD       // cartão CNPJ
+  ADDRESS_PROOF
+  OTHER
+}
+
+enum VerificationArtifactStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model VerificationArtifact {
+  id          String                       @id @default(cuid())
+  companyId   String
+  kind        VerificationArtifactKind
+  status      VerificationArtifactStatus   @default(PENDING)
+  url         String                       // signed URL or blob path
+  hash        String?
+  notes       String?                      @db.Text
+  uploadedById String
+  reviewedById String?
+  reviewedAt  DateTime?
+  createdAt   DateTime                     @default(now())
+
+  company    Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  uploadedBy User    @relation("ArtifactUploader", fields: [uploadedById], references: [id])
+  reviewedBy User?   @relation("ArtifactReviewer", fields: [reviewedById], references: [id])
+
+  @@index([companyId])
+  @@index([status])
 }
 
 // ─────────────────────────────────────────────────────────
