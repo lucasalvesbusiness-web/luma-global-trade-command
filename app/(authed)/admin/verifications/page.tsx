@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 
 import { auth } from '@/server/auth/config';
-import { repositories } from '@/server/repositories';
+import { db } from '@/lib/db';
 import { VerificationsAdminClient } from '@/components/admin/VerificationsAdminClient';
 
 export default async function VerificationsAdminPage() {
@@ -9,6 +9,12 @@ export default async function VerificationsAdminPage() {
   if (!session?.user) redirect('/auth/sign-in?callbackUrl=/admin/verifications');
   if (session.user.platformRole !== 'ADMIN') redirect('/');
 
-  const pending = await repositories.verificationArtifact.listPending();
-  return <VerificationsAdminClient initialItems={pending} />;
+  // All artifacts (filtered client-side by tab) — capped to recent 200.
+  const items = await db.verificationArtifact.findMany({
+    include: { company: true },
+    orderBy: [{ status: 'asc' }, { createdAt: 'desc' }],
+    take: 200,
+  });
+
+  return <VerificationsAdminClient initialItems={items} />;
 }
