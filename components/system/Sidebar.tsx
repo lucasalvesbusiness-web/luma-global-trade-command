@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
+import { CommandPaletteTrigger } from '@/components/system/CommandPalette';
+import { NotificationBell } from '@/components/system/NotificationBell';
 import { cn } from '@/lib/utils';
 
 type NavItem = {
@@ -104,25 +106,29 @@ export function Sidebar({
         })}
       </div>
 
-      <form action="/api/auth/signout" method="post">
-        <button
-          type="submit"
-          title="Sair"
-          className="flex h-9 w-9 items-center justify-center rounded-md text-ink-400 transition-colors hover:bg-white/[0.04] hover:text-ink-100"
-        >
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={1.5}
-            className="h-4 w-4"
+      <div className="flex flex-col items-center gap-1.5">
+        <CommandPaletteTrigger />
+        <NotificationBell />
+        <form action="/api/auth/signout" method="post">
+          <button
+            type="submit"
+            title="Sair"
+            className="flex h-9 w-9 items-center justify-center rounded-md text-ink-400 transition-colors hover:bg-white/[0.04] hover:text-ink-100"
           >
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-            <polyline points="16 17 21 12 16 7" />
-            <line x1="21" x2="9" y1="12" y2="12" />
-          </svg>
-        </button>
-      </form>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={1.5}
+              className="h-4 w-4"
+            >
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" x2="9" y1="12" y2="12" />
+            </svg>
+          </button>
+        </form>
+      </div>
     </aside>
   );
 }

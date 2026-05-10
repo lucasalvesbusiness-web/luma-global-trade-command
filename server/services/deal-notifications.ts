@@ -2,6 +2,7 @@ import type { DealRoomStatus } from '@/lib/types/enums';
 
 import { db } from '@/lib/db';
 import { log } from '@/lib/log/logger';
+import { emitNotificationToCompanyOwners } from '@/server/services/notification-emitter';
 import {
   sendDealAcceptedEmail,
   sendDealConfirmedEmail,
@@ -40,9 +41,34 @@ export async function notifyDealTransition(params: {
   dealRoomId: string;
   to: DealRoomStatus;
 }) {
-  if (MAIL_DISABLED) return;
   const dr = await dealContext(params.dealRoomId);
   if (!dr) return;
+
+  // In-app notifications always fire (independent of MAIL_DISABLED).
+  const link = `/d/${dr.id}`;
+  const recipientCompanyId =
+    params.to === 'OPENED' ||
+    params.to === 'ACCEPTED' ||
+    params.to === 'CONFIRMED'
+      ? dr.supplierCompanyId
+      : dr.buyerCompanyId;
+  const titleByStatus: Record<string, string> = {
+    OPENED: `Novo deal: ${dr.title}`,
+    QUOTED: `Cotação enviada: ${dr.title}`,
+    ACCEPTED: `Cotação aceita: ${dr.title}`,
+    DELIVERED: `Entrega declarada: ${dr.title}`,
+    CONFIRMED: `Entrega confirmada: ${dr.title}`,
+  };
+  if (titleByStatus[params.to]) {
+    await emitNotificationToCompanyOwners({
+      companyId: recipientCompanyId,
+      type: 'DEAL_TRANSITION',
+      title: titleByStatus[params.to]!,
+      link,
+    });
+  }
+
+  if (MAIL_DISABLED) return;
 
   const buyerEmails = await ownerEmailsForCompany(dr.buyerCompanyId);
   const supplierEmails = await ownerEmailsForCompany(dr.supplierCompanyId);
@@ -88,7 +114,6 @@ export async function notifyDealTransition(params: {
       );
     }
   } catch (e) {
-    // Non-fatal: emails are best-effort. Audit trail still tells the story.
     log.warn({ err: e, dealRoomId: dr.id, to: params.to }, 'deal_email_failed');
   }
 }
