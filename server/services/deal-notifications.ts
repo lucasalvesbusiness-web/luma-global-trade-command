@@ -1,4 +1,4 @@
-import type { DealRoomStatus } from '@prisma/client';
+import type { DealRoomStatus } from '@/lib/types/enums';
 
 import { db } from '@/lib/db';
 import { log } from '@/lib/log/logger';

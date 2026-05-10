@@ -1,13 +1,17 @@
-// B2B Trust Network — pivot baseline schema
+// B2B Trust Network — pivot baseline schema (SQLite variant).
 // Canonical reference: docs/06-operational-ontology-and-object-model.md
-// F1: Company expanded with location, ServiceOffering, VerificationArtifact.
+//
+// Status fields are TEXT with string literal unions enforced at runtime
+// via Zod and at compile time via lib/types/enums.ts. To migrate back
+// to Postgres, replace the provider, restore native enums, and re-add
+// @db.Text / @db.Decimal where annotated below.
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -21,7 +25,8 @@ model User {
   email         String    @unique
   emailVerified DateTime?
   image         String?
-  role          UserRole  @default(MEMBER)
+  // UserRole: MEMBER | ADMIN
+  role          String    @default("MEMBER")
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -35,23 +40,18 @@ model User {
   messagesSent      DealRoomMessage[]
 }
 
-enum UserRole {
-  MEMBER
-  ADMIN
-}
-
 model Account {
   id                String  @id @default(cuid())
   userId            String
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -79,58 +79,40 @@ model VerificationToken {
 // Company
 // ─────────────────────────────────────────────────────────
 
-enum VerificationStatus {
-  UNVERIFIED
-  EMAIL_VERIFIED
-  DOC_VERIFIED
-}
-
-enum CompanyMemberRole {
-  OWNER
-  COMMERCIAL
-  OPERATIONS
-  FINANCE
-  BUYER
-}
-
-enum DealTemplate {
-  ONE_OFF
-  RECURRING
-  PRODUCT_SUPPLY
-}
-
 model Company {
   id                 String             @id @default(cuid())
   slug               String             @unique
   legalName          String
   tradeName          String?
-  taxId              String             @unique // CNPJ (digits only)
-  description        String?            @db.Text
+  taxId              String             @unique // CNPJ digits-only
+  description        String?
   city               String?
   state              String?
-  // Location stored as Decimal pair; PostGIS Point materialized via SQL view in F2.
-  latitude           Decimal?           @db.Decimal(9, 6)
-  longitude          Decimal?           @db.Decimal(9, 6)
+  // SQLite: stored as Float instead of Decimal(9,6).
+  latitude           Float?
+  longitude          Float?
   serviceRadiusKm    Int?
-  verificationStatus VerificationStatus @default(UNVERIFIED)
+  // VerificationStatus: UNVERIFIED | EMAIL_VERIFIED | DOC_VERIFIED
+  verificationStatus String             @default("UNVERIFIED")
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
 
-  members      CompanyMember[]
-  offerings    ServiceOffering[]
-  artifacts    VerificationArtifact[]
-  dealsAsBuyer    DealRoom[] @relation("DealRoomBuyer")
-  dealsAsSupplier DealRoom[] @relation("DealRoomSupplier")
-  reviewsGiven    Review[]   @relation("ReviewRater")
-  reviewsReceived Review[]   @relation("ReviewRated")
+  members         CompanyMember[]
+  offerings       ServiceOffering[]
+  artifacts       VerificationArtifact[]
+  dealsAsBuyer    DealRoom[]             @relation("DealRoomBuyer")
+  dealsAsSupplier DealRoom[]             @relation("DealRoomSupplier")
+  reviewsGiven    Review[]               @relation("ReviewRater")
+  reviewsReceived Review[]               @relation("ReviewRated")
 }
 
 model CompanyMember {
-  id        String            @id @default(cuid())
+  id        String   @id @default(cuid())
   userId    String
   companyId String
-  role      CompanyMemberRole
-  createdAt DateTime          @default(now())
+  // CompanyMemberRole: OWNER | COMMERCIAL | OPERATIONS | FINANCE | BUYER
+  role      String
+  createdAt DateTime @default(now())
 
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
@@ -140,13 +122,14 @@ model CompanyMember {
 }
 
 model ServiceOffering {
-  id          String       @id @default(cuid())
+  id          String   @id @default(cuid())
   companyId   String
-  category    String       // e.g. "refrigeração", "elétrica", "TI"
+  category    String
   subcategory String?
-  modality    DealTemplate
-  description String?      @db.Text
-  createdAt   DateTime     @default(now())
+  // DealTemplate: ONE_OFF | RECURRING | PRODUCT_SUPPLY
+  modality    String
+  description String?
+  createdAt   DateTime @default(now())
 
   company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
@@ -154,30 +137,20 @@ model ServiceOffering {
   @@index([category])
 }
 
-enum VerificationArtifactKind {
-  TAX_ID_CARD       // cartão CNPJ
-  ADDRESS_PROOF
-  OTHER
-}
-
-enum VerificationArtifactStatus {
-  PENDING
-  APPROVED
-  REJECTED
-}
-
 model VerificationArtifact {
-  id          String                       @id @default(cuid())
-  companyId   String
-  kind        VerificationArtifactKind
-  status      VerificationArtifactStatus   @default(PENDING)
-  url         String                       // signed URL or blob path
-  hash        String?
-  notes       String?                      @db.Text
+  id           String    @id @default(cuid())
+  companyId    String
+  // VerificationArtifactKind: TAX_ID_CARD | ADDRESS_PROOF | OTHER
+  kind         String
+  // VerificationArtifactStatus: PENDING | APPROVED | REJECTED
+  status       String    @default("PENDING")
+  url          String
+  hash         String?
+  notes        String?
   uploadedById String
   reviewedById String?
-  reviewedAt  DateTime?
-  createdAt   DateTime                     @default(now())
+  reviewedAt   DateTime?
+  createdAt    DateTime  @default(now())
 
   company    Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
   uploadedBy User    @relation("ArtifactUploader", fields: [uploadedById], references: [id])
@@ -188,55 +161,31 @@ model VerificationArtifact {
 }
 
 // ─────────────────────────────────────────────────────────
-// DealRoom — transactional core (F3)
+// DealRoom — transactional core
 // ─────────────────────────────────────────────────────────
 
-enum DealRoomStatus {
-  OPENED
-  SCOPED
-  QUOTED
-  ACCEPTED
-  IN_PROGRESS
-  DELIVERED
-  CONFIRMED
-  CLOSED
-  DISPUTED
-  CANCELLED
-}
-
-enum DeliveryCycleStatus {
-  SCHEDULED
-  DELIVERED
-  CONFIRMED
-  CANCELLED
-}
-
-enum EvidenceKind {
-  PHOTO
-  DOC
-  SIGNATURE
-  INVOICE_PREVIEW
-}
-
 model DealRoom {
-  id              String         @id @default(cuid())
-  buyerCompanyId  String
+  id                String   @id @default(cuid())
+  buyerCompanyId    String
   supplierCompanyId String
-  template        DealTemplate
-  status          DealRoomStatus @default(OPENED)
-  title           String
-  scopePayload    Json?
-  // Quote (in cents to avoid float). Null until QUOTED.
-  quoteCents      Int?
-  quoteCurrency   String?        @default("BRL")
-  openedAt        DateTime       @default(now())
-  acceptedAt      DateTime?
-  deliveredAt     DateTime?
-  confirmedAt     DateTime?
-  closedAt        DateTime?
-  disputedAt      DateTime?
-  cancelledAt     DateTime?
-  updatedAt       DateTime       @updatedAt
+  // DealTemplate: ONE_OFF | RECURRING | PRODUCT_SUPPLY
+  template          String
+  // DealRoomStatus: OPENED | SCOPED | QUOTED | ACCEPTED | IN_PROGRESS |
+  // DELIVERED | CONFIRMED | CLOSED | DISPUTED | CANCELLED
+  status            String   @default("OPENED")
+  title             String
+  // SQLite stores Json as text; Prisma serializes/deserializes.
+  scopePayload      Json?
+  quoteCents        Int?
+  quoteCurrency     String?  @default("BRL")
+  openedAt          DateTime @default(now())
+  acceptedAt        DateTime?
+  deliveredAt       DateTime?
+  confirmedAt       DateTime?
+  closedAt          DateTime?
+  disputedAt        DateTime?
+  cancelledAt       DateTime?
+  updatedAt         DateTime @updatedAt
 
   buyerCompany    Company           @relation("DealRoomBuyer", fields: [buyerCompanyId], references: [id])
   supplierCompany Company           @relation("DealRoomSupplier", fields: [supplierCompanyId], references: [id])
@@ -250,16 +199,16 @@ model DealRoom {
 }
 
 model DeliveryCycle {
-  id          String              @id @default(cuid())
+  id          String    @id @default(cuid())
   dealRoomId  String
-  // 1-based ordinal; for monthly RECURRING this is "month #1, #2, ..."
   ordinal     Int
-  status      DeliveryCycleStatus @default(SCHEDULED)
+  // DeliveryCycleStatus: SCHEDULED | DELIVERED | CONFIRMED | CANCELLED
+  status      String    @default("SCHEDULED")
   scheduledAt DateTime?
   deliveredAt DateTime?
   confirmedAt DateTime?
-  notes       String?             @db.Text
-  createdAt   DateTime            @default(now())
+  notes       String?
+  createdAt   DateTime  @default(now())
 
   dealRoom  DealRoom   @relation(fields: [dealRoomId], references: [id], onDelete: Cascade)
   evidences Evidence[]
@@ -269,16 +218,17 @@ model DeliveryCycle {
 }
 
 model Evidence {
-  id            String       @id @default(cuid())
-  dealRoomId    String
-  cycleId       String?
-  kind          EvidenceKind
-  url           String
-  caption       String?      @db.Text
-  uploadedById  String
-  acceptedById  String?
-  acceptedAt    DateTime?
-  createdAt     DateTime     @default(now())
+  id           String    @id @default(cuid())
+  dealRoomId   String
+  cycleId      String?
+  // EvidenceKind: PHOTO | DOC | SIGNATURE | INVOICE_PREVIEW
+  kind         String
+  url          String
+  caption      String?
+  uploadedById String
+  acceptedById String?
+  acceptedAt   DateTime?
+  createdAt    DateTime  @default(now())
 
   dealRoom   DealRoom       @relation(fields: [dealRoomId], references: [id], onDelete: Cascade)
   cycle      DeliveryCycle? @relation(fields: [cycleId], references: [id], onDelete: SetNull)
@@ -293,7 +243,7 @@ model DealRoomMessage {
   id         String   @id @default(cuid())
   dealRoomId String
   authorId   String
-  body       String   @db.Text
+  body       String
   createdAt  DateTime @default(now())
 
   dealRoom DealRoom @relation(fields: [dealRoomId], references: [id], onDelete: Cascade)
@@ -303,19 +253,19 @@ model DealRoomMessage {
 }
 
 // ─────────────────────────────────────────────────────────
-// Review (F4) — bilateral, auto-created on DealRoom CONFIRMED
+// Review (auto-created on DealRoom CONFIRMED)
 // ─────────────────────────────────────────────────────────
 
 model Review {
-  id              String   @id @default(cuid())
-  dealRoomId      String
-  raterCompanyId  String
-  ratedCompanyId  String
-  rating          Int?     // 1-5; null until rater completes
-  comment         String?  @db.Text
-  category        String?  // contextual category (from supplier's offerings)
-  submittedAt     DateTime?
-  createdAt       DateTime @default(now())
+  id             String    @id @default(cuid())
+  dealRoomId     String
+  raterCompanyId String
+  ratedCompanyId String
+  rating         Int?
+  comment        String?
+  category       String?
+  submittedAt    DateTime?
+  createdAt      DateTime  @default(now())
 
   raterCompany Company @relation("ReviewRater", fields: [raterCompanyId], references: [id])
   ratedCompany Company @relation("ReviewRated", fields: [ratedCompanyId], references: [id])
@@ -326,7 +276,7 @@ model Review {
 }
 
 // ─────────────────────────────────────────────────────────
-// Audit (polymorphic — reused across DealRoom, Company, Review, Evidence)
+// Audit (polymorphic)
 // ─────────────────────────────────────────────────────────
 
 model AuditEvent {

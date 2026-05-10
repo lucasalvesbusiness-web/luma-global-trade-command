@@ -4,7 +4,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
-import type { AuditEvent, DealRoomStatus } from '@prisma/client';
+import type { AuditEvent } from '@prisma/client';
+import type { DealRoomStatus } from '@/lib/types/enums';
 import type { DealRoomWithRelations } from '@/server/repositories/prisma/deal-room';
 import { allowedNextStates, findTransition } from '@/server/services/deal-room-transitions';
 import { Badge } from '@/components/ui/Badge';
@@ -41,8 +42,9 @@ export function DealDetailClient({
   const [error, setError] = useState<string | null>(null);
 
   const counterparty = viewerRole === 'BUYER' ? deal.supplierCompany : deal.buyerCompany;
-  const nextStates = allowedNextStates(deal.status).filter((to) => {
-    const t = findTransition(deal.status, to);
+  const dealStatus = deal.status as DealRoomStatus;
+  const nextStates = allowedNextStates(dealStatus).filter((to) => {
+    const t = findTransition(dealStatus, to);
     return t && (t.actor === 'EITHER' || t.actor === viewerRole);
   });
 

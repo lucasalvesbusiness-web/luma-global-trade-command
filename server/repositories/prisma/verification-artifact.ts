@@ -1,4 +1,6 @@
-import type { PrismaClient, VerificationArtifactStatus } from '@prisma/client';
+import type { PrismaClient } from '@prisma/client';
+
+import type { VerificationArtifactStatus } from '@/lib/types/enums';
 
 import type {
   CreateArtifactInput,

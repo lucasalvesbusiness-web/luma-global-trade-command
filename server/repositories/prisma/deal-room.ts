@@ -1,12 +1,15 @@
 import type {
   DealRoom,
-  DealRoomStatus,
-  DealTemplate,
   DeliveryCycle,
   Evidence,
-  EvidenceKind,
   PrismaClient,
 } from '@prisma/client';
+
+import type {
+  DealRoomStatus,
+  DealTemplate,
+  EvidenceKind,
+} from '@/lib/types/enums';
 
 export type DealRoomWithRelations = DealRoom & {
   buyerCompany: { id: string; slug: string; legalName: string; tradeName: string | null };

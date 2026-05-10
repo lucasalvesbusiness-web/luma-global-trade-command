@@ -3,6 +3,7 @@
 import { useState } from 'react';
 
 import type { Company, VerificationArtifact } from '@prisma/client';
+// (model types only — enum-like fields are typed via lib/types/enums)
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { trpc } from '@/lib/trpc/react';

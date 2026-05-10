@@ -74,10 +74,12 @@ export const discoveryRouter = router({
         where: {
           ...(input.query
             ? {
+                // SQLite's LIKE is case-insensitive by default; Postgres needs
+                // mode: 'insensitive'. We omit mode for portability.
                 OR: [
-                  { legalName: { contains: input.query, mode: 'insensitive' } },
-                  { tradeName: { contains: input.query, mode: 'insensitive' } },
-                  { description: { contains: input.query, mode: 'insensitive' } },
+                  { legalName: { contains: input.query } },
+                  { tradeName: { contains: input.query } },
+                  { description: { contains: input.query } },
                 ],
               }
             : {}),

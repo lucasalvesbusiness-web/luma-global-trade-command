@@ -1,4 +1,6 @@
-import type { PrismaClient, VerificationStatus } from '@prisma/client';
+import type { PrismaClient } from '@prisma/client';
+
+import type { CompanyMemberRole, VerificationStatus } from '@/lib/types/enums';
 
 import type {
   CompanyRepository,
@@ -121,7 +123,10 @@ export function createPrismaCompanyRepository(db: PrismaClient): CompanyReposito
         include: { company: true },
         orderBy: { createdAt: 'asc' },
       });
-      return members.map((m) => ({ company: m.company, role: m.role }));
+      return members.map((m) => ({
+        company: m.company,
+        role: m.role as CompanyMemberRole,
+      }));
     },
   };
 }

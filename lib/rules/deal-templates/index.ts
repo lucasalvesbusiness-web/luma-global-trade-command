@@ -1,5 +1,6 @@
-import type { DealTemplate } from '@prisma/client';
 import { z } from 'zod';
+
+import type { DealTemplate } from '@/lib/types/enums';
 
 import { oneOffScopeSchema } from './one-off';
 import { recurringScopeSchema } from './recurring';

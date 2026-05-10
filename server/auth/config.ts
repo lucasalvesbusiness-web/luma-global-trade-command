@@ -4,6 +4,11 @@ import { PrismaAdapter } from '@auth/prisma-adapter';
 import Nodemailer from 'next-auth/providers/nodemailer';
 
 import { db } from '@/lib/db';
+import type {
+  CompanyMemberRole,
+  UserRole,
+  VerificationStatus,
+} from '@/lib/types/enums';
 import { sendMagicLinkEmail } from '@/server/mail/magic-link';
 import { mailFrom } from '@/server/mail/transport';
 
@@ -41,15 +46,15 @@ export const authConfig = {
         });
         if (member) {
           session.user.companyId = member.companyId;
-          session.user.companyRole = member.role;
+          session.user.companyRole = member.role as CompanyMemberRole;
           session.user.companySlug = member.company.slug;
-          session.user.companyVerification = member.company.verificationStatus;
+          session.user.companyVerification = member.company.verificationStatus as VerificationStatus;
         }
         const dbUser = await db.user.findUnique({
           where: { id: user.id },
           select: { role: true },
         });
-        if (dbUser) session.user.platformRole = dbUser.role;
+        if (dbUser) session.user.platformRole = dbUser.role as UserRole;
       }
       return session;
     },

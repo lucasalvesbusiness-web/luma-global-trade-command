@@ -1,4 +1,4 @@
-import type { DealRoomStatus } from '@prisma/client';
+import type { DealRoomStatus } from '@/lib/types/enums';
 
 /**
  * FSM for DealRoom.

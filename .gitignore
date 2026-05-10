@@ -43,6 +43,8 @@ next-env.d.ts
 
 # prisma
 prisma/migrations/.DS_Store
+prisma/*.db
+prisma/*.db-journal
 
 # local imagery drops (não versionar fotos reais no repo)
 public/imagery/field/**/*.jpg

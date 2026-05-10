@@ -1,14 +1,17 @@
 import type {
   Company,
   CompanyMember,
-  CompanyMemberRole,
-  DealTemplate,
   ServiceOffering,
   VerificationArtifact,
+} from '@prisma/client';
+
+import type {
+  CompanyMemberRole,
+  DealTemplate,
   VerificationArtifactKind,
   VerificationArtifactStatus,
   VerificationStatus,
-} from '@prisma/client';
+} from '@/lib/types/enums';
 
 export type CompanyWithRelations = Company & {
   members: CompanyMember[];
