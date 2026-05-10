@@ -29,14 +29,33 @@ const mono = IBM_Plex_Mono({
   display: 'swap',
 });
 
+const siteUrl = process.env.AUTH_URL ?? 'http://localhost:3000';
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: {
-    default: 'Rede de Confiança Transacional B2B',
-    template: '%s · Rede de Confiança',
+    default: 'Lastro · Confiança que se carrega',
+    template: '%s · Lastro',
   },
   description:
-    'Infraestrutura de confiança transacional entre empresas — descoberta, deal room auditável e reputação derivada de execução real.',
+    'Lastro é a rede onde empresas se descobrem, negociam e provam execução. Confiança não é discurso — é evidência auditável.',
+  applicationName: 'Lastro',
   robots: { index: false, follow: false },
+  openGraph: {
+    title: 'Lastro · Confiança que se carrega',
+    description:
+      'A rede onde empresas se descobrem, negociam e provam execução. Cada negócio fortalece a próxima decisão.',
+    siteName: 'Lastro',
+    type: 'website',
+    images: ['/api/og'],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Lastro · Confiança que se carrega',
+    description:
+      'A rede onde empresas se descobrem, negociam e provam execução.',
+    images: ['/api/og'],
+  },
 };
 
 export default async function RootLayout({

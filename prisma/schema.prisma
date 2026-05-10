@@ -1,4 +1,4 @@
-// B2B Trust Network — pivot baseline schema (SQLite variant).
+// Lastro — pivot baseline schema (SQLite variant).
 // Canonical reference: docs/06-operational-ontology-and-object-model.md
 //
 // Status fields are TEXT with string literal unions enforced at runtime

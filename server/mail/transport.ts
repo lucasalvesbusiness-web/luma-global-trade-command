@@ -5,7 +5,7 @@ const port = Number(process.env.SMTP_PORT ?? 1025);
 const user = process.env.SMTP_USER;
 const pass = process.env.SMTP_PASSWORD;
 
-export const mailFrom = process.env.SMTP_FROM ?? 'no-reply@b2btrust.local';
+export const mailFrom = process.env.SMTP_FROM ?? 'no-reply@lastro.network';
 
 export const transporter = nodemailer.createTransport({
   host,

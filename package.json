@@ -1,8 +1,8 @@
 {
-  "name": "b2b-trust-network",
+  "name": "lastro",
   "version": "0.1.0",
   "private": true,
-  "description": "Rede de Confiança Transacional B2B — descoberta, deal room auditável e reputação derivada de execução real",
+  "description": "Lastro · A confiança que a empresa carrega quando abre a próxima conversa",
   "scripts": {
     "predev": "node -e \"require('fs').rmSync('.next',{recursive:true,force:true,maxRetries:10,retryDelay:200})\"",
     "dev": "next dev --turbopack",

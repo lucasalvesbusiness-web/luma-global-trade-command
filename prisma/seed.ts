@@ -1,5 +1,5 @@
 /**
- * Seed for the B2B Trust Network MVP.
+ * Seed for the Lastro MVP.
  *
  * Creates:
  *  - 1 platform admin user
@@ -24,13 +24,13 @@ const db = new PrismaClient();
 const SEED_PASSWORD = 'senha123';
 
 async function main() {
-  console.log('🌱 Seeding B2B Trust Network…');
+  console.log('🌱 Seeding Lastro…');
   const passwordHash = await bcrypt.hash(SEED_PASSWORD, 10);
 
   // ─── Users ────────────────────────────────────────────────────────────
   const admin = await db.user.create({
     data: {
-      email: 'admin@b2btrust.local',
+      email: 'admin@lastro.network',
       name: 'Admin Plataforma',
       role: 'ADMIN',
       emailVerified: new Date(),

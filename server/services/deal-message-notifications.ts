@@ -10,7 +10,7 @@ const wrap = (title: string, body: string) => `
     <h2 style="font-weight: 500; margin: 0 0 16px;">${title}</h2>
     ${body}
     <hr style="border: none; border-top: 1px solid #eee; margin: 32px 0;" />
-    <p style="font-size: 12px; color: #999;">Notificação enviada pela Rede de Confiança Transacional B2B.</p>
+    <p style="font-size: 12px; color: #999;">Notificação enviada pela Lastro.</p>
   </div>
 `;
 

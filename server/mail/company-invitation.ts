@@ -17,7 +17,7 @@ export async function sendCompanyInvitationEmail(params: {
       <p style="line-height: 1.55;">
         <strong>${params.inviterName}</strong> está convidando você para entrar em
         <strong>${params.companyName}</strong> como <strong>${params.roleLabel}</strong> na
-        Rede de Confiança Transacional B2B.
+        Lastro.
       </p>
       <p style="margin: 24px 0;">
         <a href="${url}" style="display: inline-block; padding: 12px 20px; background: #1a1a1a; color: #fff; text-decoration: none; border-radius: 6px;">Aceitar convite</a>

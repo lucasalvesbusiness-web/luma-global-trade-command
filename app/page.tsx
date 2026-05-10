@@ -201,7 +201,7 @@ export default async function HomePage() {
 
         <footer className="border-t border-white/[0.05] py-10">
           <div className="mx-auto flex max-w-layout flex-wrap items-center justify-between gap-4 px-6">
-            <TechLabel>B2B Trust Network · 2026</TechLabel>
+            <TechLabel>Lastro · 2026</TechLabel>
             <nav className="flex gap-6 text-xs uppercase tracking-wider text-ink-400">
               <Link href="/legal/privacy" className="hover:text-ink-100">
                 Privacidade
