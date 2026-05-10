@@ -1,6 +1,10 @@
 import type { DefaultSession } from 'next-auth';
 
-import type { CompanyMemberRole, UserRole, VerificationStatus } from '@/lib/types/enums';
+import type {
+  CompanyMemberRole,
+  UserRole,
+  VerificationStatus,
+} from '@/lib/types/enums';
 
 declare module 'next-auth' {
   interface Session {
@@ -12,5 +16,16 @@ declare module 'next-auth' {
       companyVerification?: VerificationStatus;
       platformRole?: UserRole;
     } & DefaultSession['user'];
+  }
+}
+
+declare module 'next-auth/jwt' {
+  interface JWT {
+    sub?: string;
+    companyId?: string;
+    companyRole?: CompanyMemberRole;
+    companySlug?: string;
+    companyVerification?: VerificationStatus;
+    platformRole?: UserRole;
   }
 }

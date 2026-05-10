@@ -14,14 +14,18 @@
  * For a fresh seed: pnpm db:reset && pnpm prisma migrate dev && pnpm prisma:seed
  */
 
+import bcrypt from 'bcryptjs';
 import { PrismaClient } from '@prisma/client';
 
 import { ensureReviewsForConfirmedDeal } from '../server/services/reputation';
 
 const db = new PrismaClient();
 
+const SEED_PASSWORD = 'senha123';
+
 async function main() {
   console.log('🌱 Seeding B2B Trust Network…');
+  const passwordHash = await bcrypt.hash(SEED_PASSWORD, 10);
 
   // ─── Users ────────────────────────────────────────────────────────────
   const admin = await db.user.create({
@@ -30,6 +34,7 @@ async function main() {
       name: 'Admin Plataforma',
       role: 'ADMIN',
       emailVerified: new Date(),
+      passwordHash,
     },
   });
 
@@ -38,6 +43,7 @@ async function main() {
       email: 'dono@refrigerasul.com.br',
       name: 'Carla Mendes',
       emailVerified: new Date(),
+      passwordHash,
     },
   });
 
@@ -46,6 +52,7 @@ async function main() {
       email: 'dono@eletroforte.com.br',
       name: 'Rafael Souza',
       emailVerified: new Date(),
+      passwordHash,
     },
   });
 
@@ -54,6 +61,7 @@ async function main() {
       email: 'dono@guardatech.com.br',
       name: 'Patrícia Lima',
       emailVerified: new Date(),
+      passwordHash,
     },
   });
 
@@ -62,6 +70,7 @@ async function main() {
       email: 'dono@avpro.studio',
       name: 'Bruno Tavares',
       emailVerified: new Date(),
+      passwordHash,
     },
   });
 
@@ -70,6 +79,7 @@ async function main() {
       email: 'compras@mercadocentral.com.br',
       name: 'Fernanda Alves',
       emailVerified: new Date(),
+      passwordHash,
     },
   });
 
@@ -415,7 +425,7 @@ async function main() {
 
   console.log('✅ Seed completo.');
   console.log('');
-  console.log('Logins (use magic link via Mailpit em http://localhost:8025):');
+  console.log(`Logins (senha padrão: ${SEED_PASSWORD}):`);
   console.log(`  ADMIN    → ${admin.email}`);
   console.log(`  Compr.   → ${ownerMercado.email}     (Mercado Central — DOC_VERIFIED)`);
   console.log(`  Forn. 1  → ${ownerRefrigera.email}    (Refrigera Sul — 2 deals confirmados)`);

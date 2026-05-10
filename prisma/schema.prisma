@@ -25,6 +25,7 @@ model User {
   email         String    @unique
   emailVerified DateTime?
   image         String?
+  passwordHash  String?
   // UserRole: MEMBER | ADMIN
   role          String    @default("MEMBER")
   createdAt     DateTime  @default(now())

@@ -1,7 +1,8 @@
+import bcrypt from 'bcryptjs';
 import NextAuth from 'next-auth';
 import type { NextAuthConfig } from 'next-auth';
-import { PrismaAdapter } from '@auth/prisma-adapter';
-import Nodemailer from 'next-auth/providers/nodemailer';
+import Credentials from 'next-auth/providers/credentials';
+import { z } from 'zod';
 
 import { db } from '@/lib/db';
 import type {
@@ -9,52 +10,91 @@ import type {
   UserRole,
   VerificationStatus,
 } from '@/lib/types/enums';
-import { sendMagicLinkEmail } from '@/server/mail/magic-link';
-import { mailFrom } from '@/server/mail/transport';
+
+const credentialsSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(6),
+});
 
 export const authConfig = {
-  adapter: PrismaAdapter(db),
-  session: { strategy: 'database' },
+  // JWT strategy is required when using CredentialsProvider.
+  session: { strategy: 'jwt' },
   pages: {
     signIn: '/auth/sign-in',
-    verifyRequest: '/auth/verify',
   },
   providers: [
-    Nodemailer({
-      server: {
-        host: process.env.SMTP_HOST ?? 'localhost',
-        port: Number(process.env.SMTP_PORT ?? 1025),
-        auth:
-          process.env.SMTP_USER && process.env.SMTP_PASSWORD
-            ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASSWORD }
-            : undefined,
+    Credentials({
+      credentials: {
+        email: { label: 'Email', type: 'email' },
+        password: { label: 'Senha', type: 'password' },
       },
-      from: mailFrom,
-      async sendVerificationRequest({ identifier, url }) {
-        await sendMagicLinkEmail({ to: identifier, url });
+      async authorize(raw) {
+        const parsed = credentialsSchema.safeParse(raw);
+        if (!parsed.success) return null;
+
+        const user = await db.user.findUnique({
+          where: { email: parsed.data.email.toLowerCase() },
+        });
+        if (!user || !user.passwordHash) return null;
+
+        const ok = await bcrypt.compare(parsed.data.password, user.passwordHash);
+        if (!ok) return null;
+
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          image: user.image,
+        };
       },
     }),
   ],
   callbacks: {
-    async session({ session, user }) {
-      if (session.user && user) {
-        session.user.id = user.id;
+    async jwt({ token, user, trigger }) {
+      // On sign-in, embed user.id into the token.
+      if (user) {
+        token.sub = user.id;
+      }
+
+      // Hydrate company info on sign-in or when a refresh is requested.
+      if (token.sub && (user || trigger === 'update' || !token.companyId)) {
         const member = await db.companyMember.findFirst({
-          where: { userId: user.id },
+          where: { userId: token.sub },
           orderBy: { createdAt: 'asc' },
-          include: { company: { select: { slug: true, verificationStatus: true } } },
+          include: {
+            company: { select: { slug: true, verificationStatus: true } },
+          },
         });
         if (member) {
-          session.user.companyId = member.companyId;
-          session.user.companyRole = member.role as CompanyMemberRole;
-          session.user.companySlug = member.company.slug;
-          session.user.companyVerification = member.company.verificationStatus as VerificationStatus;
+          token.companyId = member.companyId;
+          token.companyRole = member.role;
+          token.companySlug = member.company.slug;
+          token.companyVerification = member.company.verificationStatus;
+        } else {
+          token.companyId = undefined;
+          token.companyRole = undefined;
+          token.companySlug = undefined;
+          token.companyVerification = undefined;
         }
         const dbUser = await db.user.findUnique({
-          where: { id: user.id },
+          where: { id: token.sub },
           select: { role: true },
         });
-        if (dbUser) session.user.platformRole = dbUser.role as UserRole;
+        token.platformRole = dbUser?.role ?? 'MEMBER';
+      }
+
+      return token;
+    },
+    async session({ session, token }) {
+      if (session.user && token.sub) {
+        session.user.id = token.sub;
+        session.user.companyId = token.companyId as string | undefined;
+        session.user.companyRole = token.companyRole as CompanyMemberRole | undefined;
+        session.user.companySlug = token.companySlug as string | undefined;
+        session.user.companyVerification = token.companyVerification as
+          | VerificationStatus
+          | undefined;
+        session.user.platformRole = token.platformRole as UserRole | undefined;
       }
       return session;
     },
