@@ -5,19 +5,25 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 import type { AuditEvent } from '@prisma/client';
-import type { DealRoomStatus } from '@/lib/types/enums';
+import type { DealRoomStatus, DealTemplate } from '@/lib/types/enums';
 import type { DealRoomWithRelations } from '@/server/repositories/prisma/deal-room';
 import { allowedNextStates, findTransition } from '@/server/services/deal-room-transitions';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
-import { StatusChip } from '@/components/ui/StatusChip';
+import { TechLabel } from '@/components/ui/TechLabel';
 import { dealRoomStatusLabels, dealTemplateLabels } from '@/lib/status/enums';
+import { cn } from '@/lib/utils';
 import { trpc } from '@/lib/trpc/react';
+import { AuditLog } from './AuditLog';
+import { EvidenceGrid } from './EvidenceGrid';
+import { FSMStepper } from './FSMStepper';
+import { MessageThread } from './MessageThread';
+import { ScopeRender } from './ScopeRender';
 
 type Role = 'BUYER' | 'SUPPLIER';
+type Tab = 'scope' | 'evidence' | 'messages';
 
 const STATUS_LABELS_PT = Object.fromEntries(
   Object.entries(dealRoomStatusLabels).map(([k, v]) => [k, v['pt-br']]),
@@ -26,18 +32,19 @@ const STATUS_LABELS_PT = Object.fromEntries(
 export function DealDetailClient({
   deal,
   viewerRole,
+  viewerCompanyId,
+  viewerUserId,
   events,
 }: {
   deal: DealRoomWithRelations;
   viewerRole: Role;
+  viewerCompanyId: string;
+  viewerUserId: string;
   events: AuditEvent[];
 }) {
   const router = useRouter();
   const transition = trpc.dealRoom.transition.useMutation();
-  const attach = trpc.dealRoom.attachEvidence.useMutation();
-  const accept = trpc.dealRoom.acceptEvidence.useMutation();
-  const [evidenceUrl, setEvidenceUrl] = useState('');
-  const [evidenceCaption, setEvidenceCaption] = useState('');
+  const [tab, setTab] = useState<Tab>('scope');
   const [quoteAmount, setQuoteAmount] = useState('');
   const [error, setError] = useState<string | null>(null);
 
@@ -58,229 +65,177 @@ export function DealDetailClient({
     }
   }
 
-  async function uploadEvidence() {
-    if (!evidenceUrl) return;
-    setError(null);
-    try {
-      await attach.mutateAsync({
-        dealRoomId: deal.id,
-        kind: 'PHOTO',
-        url: evidenceUrl,
-        caption: evidenceCaption || undefined,
-      });
-      setEvidenceUrl('');
-      setEvidenceCaption('');
-      router.refresh();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Erro');
-    }
-  }
-
-  async function acceptEvidenceById(id: string) {
-    setError(null);
-    try {
-      await accept.mutateAsync({ dealRoomId: deal.id, evidenceId: id });
-      router.refresh();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Erro');
-    }
-  }
-
   return (
-    <main className="mx-auto max-w-4xl px-6 py-12">
-      <Link href="/d" className="text-xs text-ink-300 hover:underline">
-        ← Voltar aos deal rooms
-      </Link>
-
-      <header className="mt-3 mb-6 flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <p className="text-xs uppercase tracking-wider text-ink-400">
-            {viewerRole === 'BUYER' ? 'Comprador' : 'Fornecedor'} ·{' '}
-            {dealTemplateLabels[deal.template]?.['pt-br']}
-          </p>
-          <h1 className="mt-1 font-display text-3xl tracking-tight">{deal.title}</h1>
-          <p className="mt-1 text-sm text-ink-300">
-            {viewerRole === 'BUYER' ? 'Fornecedor: ' : 'Comprador: '}
-            <Link className="underline" href={`/c/${counterparty.slug}`}>
-              {counterparty.tradeName ?? counterparty.legalName}
+    <div className="flex h-screen flex-col bg-spectre-carbon">
+      {/* Top strip */}
+      <header className="border-b border-white/[0.06] bg-ink-900/60 px-6 py-4 backdrop-blur">
+        <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0">
+            <Link
+              href="/d"
+              className="mb-2 inline-flex items-center gap-1 text-[10px] uppercase tracking-wider text-ink-500 hover:text-ink-200"
+            >
+              ← deals
             </Link>
-          </p>
+            <div className="flex flex-wrap items-center gap-3">
+              <h1 className="display-md text-xl text-ink-50 md:text-2xl">{deal.title}</h1>
+              <span className="rounded-sm border border-white/10 bg-ink-800 px-2 py-0.5 text-[10px] uppercase tracking-wider text-ink-300">
+                {dealTemplateLabels[deal.template]?.['pt-br']}
+              </span>
+            </div>
+            <p className="mt-1 text-xs text-ink-400">
+              {viewerRole === 'BUYER' ? 'Comprando de' : 'Vendendo para'}{' '}
+              <Link
+                href={`/c/${counterparty.slug}`}
+                className="text-ink-200 underline decoration-amber/40 underline-offset-2 hover:text-amber-glow"
+              >
+                {counterparty.tradeName ?? counterparty.legalName}
+              </Link>
+            </p>
+          </div>
+
+          <div className="flex flex-col items-end gap-2">
+            <TechLabel className="text-[9px]">{deal.id.slice(-12)}</TechLabel>
+            {deal.quoteCents !== null && deal.quoteCents !== undefined && (
+              <p className="num-marker text-2xl font-medium text-amber-glow md:text-3xl">
+                {(deal.quoteCents / 100).toLocaleString('pt-BR', {
+                  style: 'currency',
+                  currency: deal.quoteCurrency ?? 'BRL',
+                })}
+              </p>
+            )}
+          </div>
         </div>
-        <StatusChip kind="dealRoom" value={deal.status} />
+
+        <FSMStepper status={dealStatus} />
       </header>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="flex flex-col gap-6 lg:col-span-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Escopo</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <pre className="whitespace-pre-wrap rounded-md bg-ink-850 p-4 text-xs text-ink-100">
-                {deal.scopePayload ? JSON.stringify(deal.scopePayload, null, 2) : '— sem escopo —'}
-              </pre>
-            </CardContent>
-          </Card>
+      {/* 3-col body */}
+      <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[240px_minmax(0,1fr)_320px]">
+        {/* LEFT — audit log */}
+        <aside className="hidden border-r border-white/[0.05] px-3 py-5 lg:block">
+          <AuditLog events={events} />
+        </aside>
 
-          {deal.cycles.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Ciclos de entrega ({deal.cycles.length})</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="flex flex-col gap-2 text-sm">
-                  {deal.cycles.map((cy) => (
-                    <li
-                      key={cy.id}
-                      className="flex items-center justify-between rounded-md border border-white/10 px-3 py-2"
-                    >
-                      <span>
-                        Ciclo #{cy.ordinal}
-                        {cy.scheduledAt && (
-                          <span className="ml-2 text-xs text-ink-400">
-                            previsto {new Date(cy.scheduledAt).toLocaleDateString('pt-BR')}
-                          </span>
-                        )}
-                      </span>
-                      <Badge
-                        variant={
-                          cy.status === 'CONFIRMED'
-                            ? 'verified'
-                            : cy.status === 'CANCELLED'
-                              ? 'muted'
-                              : 'outline'
-                        }
-                      >
-                        {cy.status}
-                      </Badge>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-          )}
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Evidências ({deal.evidences.length})</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-3">
-              {deal.evidences.length === 0 && (
-                <p className="text-sm text-ink-400">Sem evidências ainda.</p>
-              )}
-              {deal.evidences.map((ev) => (
-                <div
-                  key={ev.id}
-                  className="flex items-start justify-between gap-3 rounded-md border border-white/10 px-3 py-2 text-sm"
-                >
-                  <div className="min-w-0 flex-1">
-                    <a
-                      href={ev.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="block truncate font-medium underline"
-                    >
-                      {ev.kind} · {ev.url}
-                    </a>
-                    {ev.caption && (
-                      <p className="mt-1 text-xs text-ink-300">{ev.caption}</p>
-                    )}
-                  </div>
-                  {ev.acceptedAt ? (
-                    <Badge variant="verified">aceito</Badge>
-                  ) : ev.uploadedById !== /* viewerUserId */ '' && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => acceptEvidenceById(ev.id)}
-                      disabled={accept.isPending}
-                    >
-                      Aceitar
-                    </Button>
+        {/* CENTER — tabs */}
+        <section className="flex min-w-0 min-h-0 flex-col overflow-hidden">
+          <nav className="flex border-b border-white/[0.05]">
+            {(
+              [
+                { id: 'scope', label: 'Escopo' },
+                { id: 'evidence', label: `Evidências · ${deal.evidences.length}` },
+                { id: 'messages', label: 'Mensagens' },
+              ] as const
+            ).map((t) => {
+              const active = tab === t.id;
+              return (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => setTab(t.id as Tab)}
+                  className={cn(
+                    'relative px-5 py-3 text-[11px] uppercase tracking-wider transition-colors',
+                    active ? 'text-amber-glow' : 'text-ink-400 hover:text-ink-200',
                   )}
-                </div>
-              ))}
+                >
+                  {t.label}
+                  {active && (
+                    <span className="absolute bottom-0 left-0 right-0 h-px bg-amber" />
+                  )}
+                </button>
+              );
+            })}
+          </nav>
 
-              <div className="rounded-md border border-dashed border-white/15 p-3">
-                <p className="mb-2 text-xs text-ink-300">
-                  Cole uma URL pública (no MVP). Em F3.5 ligamos upload via Vercel Blob.
-                </p>
-                <div className="flex flex-col gap-2">
-                  <Input
-                    placeholder="https://… (foto, doc, etc)"
-                    value={evidenceUrl}
-                    onChange={(e) => setEvidenceUrl(e.target.value)}
-                  />
-                  <Input
-                    placeholder="legenda (opcional)"
-                    value={evidenceCaption}
-                    onChange={(e) => setEvidenceCaption(e.target.value)}
-                  />
-                  <Button onClick={uploadEvidence} disabled={attach.isPending || !evidenceUrl}>
-                    Anexar evidência
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="flex-1 overflow-y-auto px-6 py-6">
+            {tab === 'scope' && (
+              <>
+                <ScopeRender
+                  template={deal.template as DealTemplate}
+                  payload={deal.scopePayload}
+                />
+                {deal.cycles.length > 0 && (
+                  <div className="mt-10 border-t border-white/[0.05] pt-6">
+                    <TechLabel className="mb-4">
+                      Ciclos de entrega · {deal.cycles.length}
+                    </TechLabel>
+                    <ul className="space-y-2">
+                      {deal.cycles.map((cy) => (
+                        <li
+                          key={cy.id}
+                          className="flex items-center justify-between rounded-md border border-white/[0.07] bg-ink-850/50 px-3 py-2"
+                        >
+                          <span className="num-marker text-xs">
+                            #{String(cy.ordinal).padStart(2, '0')}
+                            {cy.scheduledAt && (
+                              <span className="ml-3 text-ink-500">
+                                {new Date(cy.scheduledAt).toLocaleDateString('pt-BR')}
+                              </span>
+                            )}
+                          </span>
+                          <Badge
+                            variant={
+                              cy.status === 'CONFIRMED'
+                                ? 'verified'
+                                : cy.status === 'CANCELLED'
+                                  ? 'muted'
+                                  : 'outline'
+                            }
+                          >
+                            {cy.status}
+                          </Badge>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </>
+            )}
+            {tab === 'evidence' && (
+              <EvidenceGrid
+                dealRoomId={deal.id}
+                evidences={deal.evidences}
+                onChanged={() => router.refresh()}
+              />
+            )}
+            {tab === 'messages' && (
+              <MessageThread
+                dealRoomId={deal.id}
+                viewerCompanyId={viewerCompanyId}
+                viewerUserId={viewerUserId}
+              />
+            )}
+          </div>
+        </section>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Linha do tempo</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {events.length === 0 ? (
-                <p className="text-sm text-ink-400">Sem eventos.</p>
-              ) : (
-                <ol className="flex flex-col gap-2 text-sm">
-                  {events.map((e) => (
-                    <li key={e.id} className="flex items-start gap-3">
-                      <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-amber" />
-                      <div className="flex-1">
-                        <p className="font-medium">
-                          {e.action}
-                          {e.fromStatus && e.toStatus && (
-                            <span className="ml-2 text-xs text-ink-400">
-                              {STATUS_LABELS_PT[e.fromStatus as DealRoomStatus] ?? e.fromStatus} →{' '}
-                              {STATUS_LABELS_PT[e.toStatus as DealRoomStatus] ?? e.toStatus}
-                            </span>
-                          )}
-                        </p>
-                        <p className="text-xs text-ink-400">
-                          {new Date(e.createdAt).toLocaleString('pt-BR')}
-                        </p>
-                      </div>
-                    </li>
-                  ))}
-                </ol>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+        {/* RIGHT — actions */}
+        <aside className="border-t border-white/[0.05] bg-ink-900/40 px-5 py-5 lg:border-l lg:border-t-0">
+          <TechLabel dot className="mb-4">
+            Ações disponíveis
+          </TechLabel>
 
-        <div className="flex flex-col gap-4 lg:col-span-1">
-          <Card>
-            <CardHeader>
-              <CardTitle>Ações disponíveis</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-3">
-              {nextStates.length === 0 && (
-                <p className="text-sm text-ink-400">Nenhuma ação para você neste estado.</p>
-              )}
-
+          {nextStates.length === 0 ? (
+            <p className="text-xs text-ink-500">
+              Nada para você fazer neste estado. Aguarde a contraparte.
+            </p>
+          ) : (
+            <div className="flex flex-col gap-2.5">
               {nextStates.includes('QUOTED') && viewerRole === 'SUPPLIER' && (
-                <div className="flex flex-col gap-2 rounded-md border border-white/10 p-3">
-                  <Label>Cotação (R$)</Label>
+                <div className="rounded-md border border-amber/30 bg-amber/[0.05] p-3">
+                  <Label htmlFor="quote">Cotação (R$)</Label>
                   <Input
+                    id="quote"
                     type="number"
                     min="0"
                     step="0.01"
                     placeholder="0,00"
                     value={quoteAmount}
                     onChange={(e) => setQuoteAmount(e.target.value)}
+                    className="mt-2"
                   />
                   <Button
                     size="sm"
+                    className="mt-3 w-full"
                     disabled={!quoteAmount || transition.isPending}
                     onClick={() =>
                       fireTransition('QUOTED', {
@@ -288,50 +243,40 @@ export function DealDetailClient({
                       })
                     }
                   >
-                    Enviar cotação
+                    Enviar cotação →
                   </Button>
                 </div>
               )}
 
               {nextStates
                 .filter((s) => !(s === 'QUOTED' && viewerRole === 'SUPPLIER'))
-                .map((to) => (
-                  <Button
-                    key={to}
-                    variant={to === 'CANCELLED' || to === 'DISPUTED' ? 'outline' : 'primary'}
-                    size="sm"
-                    onClick={() => fireTransition(to)}
-                    disabled={transition.isPending}
-                  >
-                    {STATUS_LABELS_PT[to] ?? to}
-                  </Button>
-                ))}
+                .map((to, idx) => {
+                  const isPositive = !['CANCELLED', 'DISPUTED'].includes(to);
+                  const isPrimary = idx === 0 && isPositive;
+                  return (
+                    <Button
+                      key={to}
+                      variant={isPrimary ? 'primary' : 'outline'}
+                      size="sm"
+                      onClick={() => fireTransition(to)}
+                      disabled={transition.isPending}
+                      className="w-full justify-between"
+                    >
+                      <span>{STATUS_LABELS_PT[to] ?? to}</span>
+                      <span>→</span>
+                    </Button>
+                  );
+                })}
 
               {error && (
-                <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+                <p className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-[10px] text-destructive">
                   {error}
                 </p>
               )}
-            </CardContent>
-          </Card>
-
-          {deal.quoteCents !== null && deal.quoteCents !== undefined && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Cotação</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="font-display text-2xl">
-                  {(deal.quoteCents / 100).toLocaleString('pt-BR', {
-                    style: 'currency',
-                    currency: deal.quoteCurrency ?? 'BRL',
-                  })}
-                </p>
-              </CardContent>
-            </Card>
+            </div>
           )}
-        </div>
+        </aside>
       </div>
-    </main>
+    </div>
   );
 }

@@ -27,6 +27,8 @@ export default async function DealDetailPage({
     <DealDetailClient
       deal={deal}
       viewerRole={isBuyer ? 'BUYER' : 'SUPPLIER'}
+      viewerCompanyId={session.user.companyId}
+      viewerUserId={session.user.id}
       events={events}
     />
   );

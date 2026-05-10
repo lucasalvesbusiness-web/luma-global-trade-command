@@ -1,12 +1,14 @@
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 
+import { db } from '@/lib/db';
 import { parseScope } from '@/lib/rules/deal-templates';
 import {
   canActorPerform,
   findTransition,
 } from '@/server/services/deal-room-transitions';
 import { notifyDealTransition } from '@/server/services/deal-notifications';
+import { notifyNewMessage } from '@/server/services/deal-message-notifications';
 import { ensureCyclesForAcceptedRecurring } from '@/server/services/delivery-cycles';
 import { ensureReviewsForConfirmedDeal } from '@/server/services/reputation';
 import { protectedProcedure, router } from '@/server/trpc/trpc';
@@ -205,5 +207,91 @@ export const dealRoomRouter = router({
         evidenceId: input.evidenceId,
         acceptedById: ctx.user.id,
       });
+    }),
+
+  messages: protectedProcedure
+    .input(z.object({ dealRoomId: z.string(), limit: z.number().int().positive().max(200).optional() }))
+    .query(async ({ ctx, input }) => {
+      await loadAndAuthorize(ctx, input.dealRoomId);
+      const messages = await db.dealRoomMessage.findMany({
+        where: { dealRoomId: input.dealRoomId },
+        orderBy: { createdAt: 'asc' },
+        take: input.limit ?? 50,
+        include: {
+          author: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              companyMembers: {
+                select: { companyId: true },
+                take: 1,
+              },
+            },
+          },
+        },
+      });
+      return messages.map((m) => ({
+        id: m.id,
+        body: m.body,
+        createdAt: m.createdAt,
+        author: {
+          id: m.author.id,
+          name: m.author.name,
+          email: m.author.email,
+          companyId: m.author.companyMembers[0]?.companyId ?? null,
+        },
+      }));
+    }),
+
+  sendMessage: protectedProcedure
+    .input(
+      z.object({
+        dealRoomId: z.string(),
+        body: z.string().min(1).max(4000),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      await loadAndAuthorize(ctx, input.dealRoomId);
+
+      // Was the previous message > 24h old? If so, dispatch an email nudge.
+      const last = await db.dealRoomMessage.findFirst({
+        where: { dealRoomId: input.dealRoomId },
+        orderBy: { createdAt: 'desc' },
+        select: { createdAt: true, authorId: true },
+      });
+      const dayMs = 24 * 60 * 60 * 1000;
+      const shouldNotify =
+        !last ||
+        Date.now() - new Date(last.createdAt).getTime() > dayMs ||
+        last.authorId !== ctx.user.id;
+
+      const created = await db.dealRoomMessage.create({
+        data: {
+          dealRoomId: input.dealRoomId,
+          authorId: ctx.user.id,
+          body: input.body.trim(),
+        },
+      });
+
+      await db.auditEvent.create({
+        data: {
+          entityType: 'DealRoomMessage',
+          entityId: created.id,
+          action: 'MESSAGE_SENT',
+          actorId: ctx.user.id,
+          diffJson: { dealRoomId: input.dealRoomId },
+        },
+      });
+
+      if (shouldNotify) {
+        await notifyNewMessage({
+          dealRoomId: input.dealRoomId,
+          senderUserId: ctx.user.id,
+          preview: input.body.slice(0, 140),
+        });
+      }
+
+      return created;
     }),
 });
