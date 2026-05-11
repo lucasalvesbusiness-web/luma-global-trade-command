@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import type { Evidence } from '@prisma/client';
 
+import { BlobUploader } from '@/components/ui/BlobUploader';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
@@ -149,13 +150,20 @@ export function EvidenceGrid({
               </select>
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="ev-url">URL</Label>
-              <Input
-                id="ev-url"
-                placeholder="https://… (foto, PDF, etc.)"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-              />
+              <Label htmlFor="ev-url">Arquivo</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="ev-url"
+                  placeholder="cole URL ou envie arquivo →"
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
+                />
+                <BlobUploader
+                  prefix={`evidence/${dealRoomId}`}
+                  label="Upload"
+                  onUploaded={(uploaded) => setUrl(uploaded)}
+                />
+              </div>
             </div>
           </div>
           <div className="flex flex-col gap-1.5">

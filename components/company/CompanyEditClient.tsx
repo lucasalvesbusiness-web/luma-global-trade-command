@@ -5,6 +5,7 @@ import { useState } from 'react';
 
 import type { VerificationArtifact } from '@prisma/client';
 import type { CompanyWithRelations } from '@/server/repositories/interfaces';
+import { BlobUploader } from '@/components/ui/BlobUploader';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
@@ -14,16 +15,69 @@ import { trpc } from '@/lib/trpc/react';
 import { cn } from '@/lib/utils';
 import { TeamSection } from './TeamSection';
 
-type Section = 'identity' | 'location' | 'description' | 'offerings' | 'verification' | 'team';
+type Section =
+  | 'identity'
+  | 'location'
+  | 'description'
+  | 'capacity'
+  | 'offerings'
+  | 'verification'
+  | 'team';
 
 const SECTIONS: Array<{ id: Section; code: string; label: string; available: boolean }> = [
   { id: 'identity', code: '00', label: 'Identidade', available: true },
   { id: 'location', code: '01', label: 'Localização', available: true },
   { id: 'description', code: '02', label: 'Descrição', available: true },
-  { id: 'offerings', code: '03', label: 'Ofertas', available: false },
-  { id: 'verification', code: '04', label: 'Verificação', available: true },
-  { id: 'team', code: '05', label: 'Equipe', available: true },
+  { id: 'capacity', code: '03', label: 'Capacidade', available: true },
+  { id: 'offerings', code: '04', label: 'Ofertas', available: false },
+  { id: 'verification', code: '05', label: 'Verificação', available: true },
+  { id: 'team', code: '06', label: 'Equipe', available: true },
 ];
+
+const COMPANY_SIZE_OPTS = [
+  { v: 'SMALL', label: 'Pequena (1–20)' },
+  { v: 'MEDIUM', label: 'Média (21–100)' },
+  { v: 'LARGE', label: 'Grande (101–500)' },
+  { v: 'ENTERPRISE', label: 'Enterprise (500+)' },
+] as const;
+
+const DELIVERY_MODE_OPTS = [
+  { v: 'LOCAL', label: 'Local' },
+  { v: 'REMOTE', label: 'Remoto' },
+  { v: 'HYBRID', label: 'Híbrido' },
+] as const;
+
+const SEGMENT_OPTS = [
+  { v: 'SMB', label: 'PME' },
+  { v: 'MID_MARKET', label: 'Mid-market' },
+  { v: 'ENTERPRISE', label: 'Enterprise' },
+  { v: 'GOVERNMENT', label: 'Governo' },
+  { v: 'CONSUMER_RETAIL', label: 'Varejo / consumidor' },
+] as const;
+
+type SegmentValue = (typeof SEGMENT_OPTS)[number]['v'];
+type SizeValue = (typeof COMPANY_SIZE_OPTS)[number]['v'];
+type DeliveryValue = (typeof DELIVERY_MODE_OPTS)[number]['v'];
+
+function parseSegmentsRaw(raw: unknown): SegmentValue[] {
+  if (!raw) return [];
+  const valid = SEGMENT_OPTS.map((s) => s.v);
+  const arr = Array.isArray(raw)
+    ? raw
+    : typeof raw === 'string'
+      ? (() => {
+          try {
+            const p = JSON.parse(raw);
+            return Array.isArray(p) ? p : [];
+          } catch {
+            return [];
+          }
+        })()
+      : [];
+  return arr.filter((s): s is SegmentValue =>
+    typeof s === 'string' && (valid as readonly string[]).includes(s),
+  );
+}
 
 export function CompanyEditClient({
   company,
@@ -50,6 +104,16 @@ export function CompanyEditClient({
   const [radius, setRadius] = useState(company.serviceRadiusKm?.toString() ?? '');
   // Description
   const [description, setDescription] = useState(company.description ?? '');
+  // Capacity
+  const [companySize, setCompanySize] = useState<SizeValue | ''>(
+    (company.companySize as SizeValue | null) ?? '',
+  );
+  const [deliveryMode, setDeliveryMode] = useState<DeliveryValue | ''>(
+    (company.deliveryMode as DeliveryValue | null) ?? '',
+  );
+  const [targetSegments, setTargetSegments] = useState<SegmentValue[]>(
+    parseSegmentsRaw(company.targetSegments),
+  );
   // Verification artifact
   const [artUrl, setArtUrl] = useState('');
   const [artKind, setArtKind] = useState<'TAX_ID_CARD' | 'ADDRESS_PROOF' | 'OTHER'>('TAX_ID_CARD');
@@ -84,6 +148,12 @@ export function CompanyEditClient({
         });
       } else if (section === 'description') {
         await update.mutateAsync({ description: description || null });
+      } else if (section === 'capacity') {
+        await update.mutateAsync({
+          companySize: companySize || null,
+          deliveryMode: deliveryMode || null,
+          targetSegments: targetSegments.length > 0 ? targetSegments : null,
+        });
       }
       flashSaved(section);
       router.refresh();
@@ -167,12 +237,31 @@ export function CompanyEditClient({
                 onChange={setTradeName}
                 placeholder="ex: Refrigera Sul"
               />
-              <Field
-                label="Foto de capa (URL)"
-                value={heroImageUrl}
-                onChange={setHeroImageUrl}
-                placeholder="https://… (aparece no popup do mapa)"
-              />
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="hero-url">Foto de capa</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="hero-url"
+                    value={heroImageUrl}
+                    onChange={(e) => setHeroImageUrl(e.target.value)}
+                    placeholder="URL ou faça upload →"
+                  />
+                  <BlobUploader
+                    prefix={`company/${company.slug}/hero`}
+                    accept="image/*"
+                    label="Upload"
+                    onUploaded={(url) => setHeroImageUrl(url)}
+                  />
+                </div>
+                {heroImageUrl && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={heroImageUrl}
+                    alt="preview da foto de capa"
+                    className="mt-2 h-32 w-full rounded-md border border-white/[0.07] object-cover"
+                  />
+                )}
+              </div>
               <SaveButton onClick={() => saveSection('identity')} pending={update.isPending} />
             </SectionWrap>
           )}
@@ -227,6 +316,73 @@ export function CompanyEditClient({
                 onClick={() => saveSection('description')}
                 pending={update.isPending}
               />
+            </SectionWrap>
+          )}
+
+          {active === 'capacity' && (
+            <SectionWrap title="Capacidade" code="03" saved={savedFlash === 'capacity'}>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="companySize">Porte da empresa</Label>
+                <select
+                  id="companySize"
+                  className="h-10 rounded-md border border-white/10 bg-ink-800 px-2 text-xs text-ink-100 focus:border-amber/60 focus:outline-none"
+                  value={companySize}
+                  onChange={(e) => setCompanySize(e.target.value as SizeValue | '')}
+                >
+                  <option value="">— não informado —</option>
+                  {COMPANY_SIZE_OPTS.map((o) => (
+                    <option key={o.v} value={o.v}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="deliveryMode">Modo de entrega</Label>
+                <select
+                  id="deliveryMode"
+                  className="h-10 rounded-md border border-white/10 bg-ink-800 px-2 text-xs text-ink-100 focus:border-amber/60 focus:outline-none"
+                  value={deliveryMode}
+                  onChange={(e) => setDeliveryMode(e.target.value as DeliveryValue | '')}
+                >
+                  <option value="">— não informado —</option>
+                  {DELIVERY_MODE_OPTS.map((o) => (
+                    <option key={o.v} value={o.v}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label>Atende qual público</Label>
+                <div className="flex flex-wrap gap-1.5">
+                  {SEGMENT_OPTS.map((o) => {
+                    const active = targetSegments.includes(o.v);
+                    return (
+                      <button
+                        key={o.v}
+                        type="button"
+                        onClick={() =>
+                          setTargetSegments((prev) =>
+                            prev.includes(o.v)
+                              ? prev.filter((s) => s !== o.v)
+                              : [...prev, o.v],
+                          )
+                        }
+                        className={cn(
+                          'rounded-full border px-2.5 py-1 text-xs transition-colors',
+                          active
+                            ? 'border-amber/40 bg-amber/10 text-amber-glow'
+                            : 'border-white/15 text-ink-300 hover:border-white/30',
+                        )}
+                      >
+                        {o.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <SaveButton onClick={() => saveSection('capacity')} pending={update.isPending} />
             </SectionWrap>
           )}
 
@@ -292,7 +448,22 @@ export function CompanyEditClient({
                       <option value="OTHER">Outro</option>
                     </select>
                   </div>
-                  <Field label="URL do arquivo" value={artUrl} onChange={setArtUrl} />
+                  <div className="flex flex-col gap-1.5">
+                    <Label htmlFor="artUrl">Arquivo</Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        id="artUrl"
+                        value={artUrl}
+                        onChange={(e) => setArtUrl(e.target.value)}
+                        placeholder="URL ou faça upload →"
+                      />
+                      <BlobUploader
+                        prefix={`company/${company.slug}/artifacts`}
+                        label="Upload"
+                        onUploaded={(url) => setArtUrl(url)}
+                      />
+                    </div>
+                  </div>
                 </div>
                 <div className="mt-3 flex flex-col gap-1.5">
                   <Label htmlFor="artNotes">Observações (opcional)</Label>

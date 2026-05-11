@@ -1,4 +1,4 @@
-import type { PrismaClient } from '@prisma/client';
+import { Prisma, type PrismaClient } from '@prisma/client';
 
 import type { CompanyMemberRole, VerificationStatus } from '@/lib/types/enums';
 
@@ -90,10 +90,13 @@ export function createPrismaCompanyRepository(db: PrismaClient): CompanyReposito
     },
 
     async update(id, input: UpdateCompanyInput) {
-      return db.company.update({
-        where: { id },
-        data: input,
-      });
+      const { targetSegments, ...rest } = input;
+      const data: Prisma.CompanyUpdateInput = { ...rest };
+      if (targetSegments !== undefined) {
+        data.targetSegments =
+          targetSegments === null ? Prisma.JsonNull : targetSegments;
+      }
+      return db.company.update({ where: { id }, data });
     },
 
     async setVerificationStatus(id, status: VerificationStatus) {

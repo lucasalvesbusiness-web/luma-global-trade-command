@@ -114,6 +114,13 @@ model Company {
   longitude          Float?
   serviceRadiusKm    Int?
   heroImageUrl       String?
+  // CompanySize: SMALL | MEDIUM | LARGE | ENTERPRISE
+  companySize        String?
+  // DeliveryMode: LOCAL | REMOTE | HYBRID
+  deliveryMode       String?
+  // Target segments served — Json array of strings
+  // (SMB | MID_MARKET | ENTERPRISE | GOVERNMENT | CONSUMER_RETAIL)
+  targetSegments     Json?
   // VerificationStatus: UNVERIFIED | EMAIL_VERIFIED | DOC_VERIFIED
   verificationStatus String             @default("UNVERIFIED")
   createdAt          DateTime           @default(now())

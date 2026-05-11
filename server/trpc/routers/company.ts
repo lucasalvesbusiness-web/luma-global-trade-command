@@ -76,6 +76,27 @@ export const companyRouter = router({
         longitude: z.number().min(-180).max(180).nullable().optional(),
         serviceRadiusKm: z.number().int().positive().max(5000).nullable().optional(),
         heroImageUrl: z.string().url().max(500).nullable().optional(),
+        companySize: z
+          .enum(['SMALL', 'MEDIUM', 'LARGE', 'ENTERPRISE'])
+          .nullable()
+          .optional(),
+        deliveryMode: z
+          .enum(['LOCAL', 'REMOTE', 'HYBRID'])
+          .nullable()
+          .optional(),
+        targetSegments: z
+          .array(
+            z.enum([
+              'SMB',
+              'MID_MARKET',
+              'ENTERPRISE',
+              'GOVERNMENT',
+              'CONSUMER_RETAIL',
+            ]),
+          )
+          .max(5)
+          .nullable()
+          .optional(),
       }),
     )
     .mutation(({ ctx, input }) =>

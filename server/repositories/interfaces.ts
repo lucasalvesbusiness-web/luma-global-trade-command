@@ -46,6 +46,9 @@ export type UpdateCompanyInput = Partial<{
   longitude: number | null;
   serviceRadiusKm: number | null;
   heroImageUrl: string | null;
+  companySize: string | null;
+  deliveryMode: string | null;
+  targetSegments: string[] | null;
 }>;
 
 export interface CompanyRepository {

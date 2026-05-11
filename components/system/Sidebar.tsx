@@ -78,7 +78,10 @@ export function Sidebar({
       : []),
     { href: '/c/edit', label: 'Editar', icon: Icon.edit },
     ...(isAdmin
-      ? [{ href: '/admin/verifications', label: 'Admin', icon: Icon.admin }]
+      ? [
+          { href: '/admin/verifications', label: 'Admin', icon: Icon.admin },
+          { href: '/admin/metrics', label: 'KPI', icon: Icon.admin },
+        ]
       : []),
   ];
 
